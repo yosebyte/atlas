@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
@@ -9,10 +8,18 @@ import (
 
 	"github.com/yosebyte/passport/pkg/conn"
 	"github.com/yosebyte/passport/pkg/log"
+	"github.com/yosebyte/passport/pkg/tls"
 )
 
-func server(parsedURL *url.URL, tlsConfig *tls.Config) error {
+func server(parsedURL *url.URL) error {
 	listenAddr := parsedURL.Host
+	tlsConfig, err := acme(listenAddr)
+	if err != nil {
+		log.Error("Unable to obtain TLS config: %v", err)
+		if tlsConfig, err = tls.NewTLSconfig(listenAddr); err != nil {
+			log.Fatal("Unable to generate TLS config: %v", err)
+		}
+	}
 	server := &http.Server{
 		Addr:      listenAddr,
 		TLSConfig: tlsConfig,

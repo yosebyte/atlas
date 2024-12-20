@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"net/url"
 	"os"
 	"time"
@@ -9,10 +8,10 @@ import (
 	"github.com/yosebyte/passport/pkg/log"
 )
 
-func coreSelect(parsedURL *url.URL, tlsConfig *tls.Config) {
+func coreSelect(parsedURL *url.URL) {
 	switch parsedURL.Scheme {
 	case "server":
-		runServer(parsedURL, tlsConfig)
+		runServer(parsedURL)
 	case "client":
 		runClient(parsedURL)
 	default:
@@ -21,10 +20,10 @@ func coreSelect(parsedURL *url.URL, tlsConfig *tls.Config) {
 	}
 }
 
-func runServer(parsedURL *url.URL, tlsConfig *tls.Config) {
+func runServer(parsedURL *url.URL) {
 	log.Info("Server started: %v", parsedURL.String())
 	for {
-		if err := server(parsedURL, tlsConfig); err != nil {
+		if err := server(parsedURL); err != nil {
 			log.Error("Server error: %v", err)
 			time.Sleep(1 * time.Second)
 			log.Info("Server restarted")

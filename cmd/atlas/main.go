@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/yosebyte/passport/pkg/log"
-	"github.com/yosebyte/passport/pkg/tls"
 )
 
 var version = "dev"
@@ -20,12 +19,5 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to parse raw URL: %v", err)
 	}
-	tlsConfig, err := acme(parsedURL.Host)
-	if err != nil {
-		log.Error("Unable to obtain TLS config: %v", err)
-		if tlsConfig, err = tls.NewTLSconfig("yosebyte/atlas:" + version); err != nil {
-			log.Fatal("Unable to generate TLS config: %v", err)
-		}
-	}
-	coreSelect(parsedURL, tlsConfig)
+	coreSelect(parsedURL)
 }
