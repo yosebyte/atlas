@@ -2,7 +2,10 @@ module github.com/yosebyte/atlas
 
 go 1.23.1
 
-require github.com/caddyserver/certmagic v0.21.4
+require (
+	github.com/caddyserver/certmagic v0.21.4
+	github.com/yosebyte/passport v1.2.2
+)
 
 require (
 	github.com/caddyserver/zerossl v0.1.3 // indirect
