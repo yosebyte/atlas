@@ -60,6 +60,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 			serverConn.Close()
 		}
 	}()
+	r.Header.Set("User-Agent", "ATLAS")
 	if err := r.Write(serverConn); err != nil {
 		log.Error("Unable to write request to server: %v", err)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

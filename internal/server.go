@@ -32,8 +32,10 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.(http.Flusher).Flush()
+	if r.Header.Get("User-Agent") != "ATLAS" {
+		w.WriteHeader(http.StatusOK)
+		w.(http.Flusher).Flush()
+	}
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
