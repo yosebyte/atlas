@@ -24,7 +24,7 @@ func Client(parsedURL *url.URL) error {
 	server := &http.Server{
 		Addr:     accessAddr,
 		ErrorLog: log.NewLogger(),
-		Handler:  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handleClientRequest(w, r, serverAddr)
 		}),
 	}
@@ -33,10 +33,6 @@ func Client(parsedURL *url.URL) error {
 }
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
-	if r.Method != http.MethodConnect {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,11 +54,6 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 			serverConn.Close()
 		}
 	}()
-	if _, err := w.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n")); err != nil {
-		log.Error("Failed to write connection established response: %v", err)
-		return
-	}
-
 	if err := conn.DataExchange(clientConn, serverConn); err != nil {
 		if err == io.EOF {
 			log.Info("Connection closed successfully: %v", err)

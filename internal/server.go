@@ -52,10 +52,6 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			targetConn.Close()
 		}
 	}()
-	if _, err := w.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n")); err != nil {
-		log.Error("Failed to write connection established response: %v", err)
-		return
-	}
 	if err := conn.DataExchange(clientConn, targetConn); err != nil {
 		if err == io.EOF {
 			log.Info("Connection closed successfully: %v", err)
