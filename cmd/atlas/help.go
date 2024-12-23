@@ -9,8 +9,6 @@ import (
 func helpInfo() {
 	log.Info(`Version: %v %v/%v
 
-Usage:
-    atlas <core_mode>://<link_addr>/<access_addr>
-
+Usage: atlas <core_mode>://<link_addr>/<access_addr>
 `, version, runtime.GOOS, runtime.GOARCH)
 }
