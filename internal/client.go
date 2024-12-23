@@ -24,15 +24,15 @@ func Client(parsedURL *url.URL) error {
 	server := &http.Server{
 		Addr:     accessAddr,
 		ErrorLog: log.NewLogger(),
-		Handler:  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleClientRequest(w, serverAddr)
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleClientRequest(w, r, serverAddr)
 		}),
 	}
 	log.Info("Starting HTTP server on %v", accessAddr)
 	return server.ListenAndServe()
 }
 
-func handleClientRequest(w http.ResponseWriter, serverAddr string) {
+func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,6 +54,11 @@ func handleClientRequest(w http.ResponseWriter, serverAddr string) {
 			serverConn.Close()
 		}
 	}()
+	if err := r.Write(serverConn); err != nil {
+		log.Error("Unable to write request to server: %v", err)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
 	if err := conn.DataExchange(clientConn, serverConn); err != nil {
 		if err == io.EOF {
 			log.Info("Connection closed successfully: %v", err)
