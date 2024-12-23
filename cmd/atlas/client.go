@@ -13,37 +13,36 @@ import (
 
 func client(parsedURL *url.URL) error {
 	serverAddr := parsedURL.Host
-	proxyAddr := parsedURL.Fragment
-	if proxyAddr == "" {
+	accessAddr := parsedURL.Fragment
+	if accessAddr == "" {
 		_, port, err := net.SplitHostPort(serverAddr)
 		if err != nil {
+			log.Error("Unable to split port: %v", err)
 			return err
 		}
-		proxyAddr = net.JoinHostPort("127.0.0.1", port)
+		accessAddr = net.JoinHostPort("127.0.0.1", port)
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handleClientRequest(w, r, serverAddr)
 	})
-	return http.ListenAndServe(proxyAddr, nil)
+	return http.ListenAndServe(accessAddr, nil)
 }
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
-	serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
-	if err != nil {
-		log.Error("Unable to dial server: %v", err)
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
-		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
-		serverConn.Close()
+		log.Error("Unable to hijack client")
 		return
 	}
 	clientConn, _, err := hijacker.Hijack()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		serverConn.Close()
+		log.Error("Unable to hijack client request: %v", err)
+		return
+	}
+	serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
+	if err != nil {
+		log.Error("Unable to dial TLS server: %v", err)
+		clientConn.Close()
 		return
 	}
 	if err := r.Write(serverConn); err != nil {
