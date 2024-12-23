@@ -28,27 +28,23 @@ func client(parsedURL *url.URL) error {
 }
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
+	serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
+	if err != nil {
+		log.Error("Unable to dial server: %v", err)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
 		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+		serverConn.Close()
 		return
 	}
 	clientConn, _, err := hijacker.Hijack()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serverConn.Close()
 		return
-	}
-	tlsConfig := &tls.Config{}
-	serverConn, err := tls.Dial("tcp", serverAddr, tlsConfig)
-	if err != nil {
-		log.Warn("Unable to verify server certificate: %v", err)
-		tlsConfig.InsecureSkipVerify = true
-		serverConn, err = tls.Dial("tcp", serverAddr, tlsConfig)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			clientConn.Close()
-			return
-		}
 	}
 	if err := r.Write(serverConn); err != nil {
 		log.Error("Unable to write request: %v", err)

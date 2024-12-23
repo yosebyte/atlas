@@ -14,10 +14,10 @@ Usage:
 
 Examples:
     # Run as server
-    atlas server://hostname:10101
+    atlas server://:10101
 
     # Run as client
-    atlas client://hostname:10101/127.0.0.1:8080
+    atlas client://server:10101/127.0.0.1:8080
 
 Arguments:
     <core_mode>    Choose from "server" and "client" core

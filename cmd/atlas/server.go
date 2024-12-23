@@ -13,12 +13,9 @@ import (
 
 func server(parsedURL *url.URL) error {
 	listenAddr := parsedURL.Host
-	tlsConfig, err := acme(listenAddr)
+	tlsConfig, err := tls.NewTLSconfig(listenAddr)
 	if err != nil {
-		log.Error("Unable to obtain TLS config: %v", err)
-		if tlsConfig, err = tls.NewTLSconfig(listenAddr); err != nil {
-			log.Fatal("Unable to generate TLS config: %v", err)
-		}
+		log.Fatal("Unable to generate TLS config: %v", err)
 	}
 	server := &http.Server{
 		Addr:      listenAddr,
