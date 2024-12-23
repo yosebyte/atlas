@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/yosebyte/atlas/internal"
 	"github.com/yosebyte/passport/pkg/log"
 )
 
@@ -23,7 +24,7 @@ func coreSelect(parsedURL *url.URL) {
 func runServer(parsedURL *url.URL) {
 	log.Info("Server started: %v", parsedURL.String())
 	for {
-		if err := server(parsedURL); err != nil {
+		if err := internal.Server(parsedURL); err != nil {
 			log.Error("Server error: %v", err)
 			time.Sleep(1 * time.Second)
 			log.Info("Server restarted")
@@ -34,7 +35,7 @@ func runServer(parsedURL *url.URL) {
 func runClient(parsedURL *url.URL) {
 	log.Info("Client started: %v", parsedURL.String())
 	for {
-		if err := client(parsedURL); err != nil {
+		if err := internal.Client(parsedURL); err != nil {
 			log.Error("Client error: %v", err)
 			time.Sleep(1 * time.Second)
 			log.Info("Client restarted")
