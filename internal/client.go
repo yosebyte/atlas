@@ -24,15 +24,15 @@ func Client(parsedURL *url.URL) error {
 	server := &http.Server{
 		Addr:     accessAddr,
 		ErrorLog: log.NewLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleClientRequest(w, r, serverAddr)
+		Handler:  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleClientRequest(w, serverAddr)
 		}),
 	}
 	log.Info("Starting HTTP server on %v", accessAddr)
 	return server.ListenAndServe()
 }
 
-func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
+func handleClientRequest(w http.ResponseWriter, serverAddr string) {
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
