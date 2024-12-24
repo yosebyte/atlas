@@ -2,7 +2,6 @@ package internal
 
 import (
 	"crypto/tls"
-	"encoding/base64"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,9 +11,10 @@ import (
 )
 
 func Client(parsedURL *url.URL) error {
+	serverAddr := parsedURL.Host
 	accessAddr := parsedURL.Fragment
 	if accessAddr == "" {
-		_, port, err := net.SplitHostPort(parsedURL.Host)
+		_, port, err := net.SplitHostPort(serverAddr)
 		if err != nil {
 			return err
 		}
@@ -24,24 +24,20 @@ func Client(parsedURL *url.URL) error {
 		Addr:     accessAddr,
 		ErrorLog: log.NewLogger(),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleClientRequest(w, r, parsedURL)
+			handleClientRequest(w, r, serverAddr)
 		}),
 	}
 	log.Info("Starting HTTP server on %v", accessAddr)
 	return server.ListenAndServe()
 }
 
-func handleClientRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL) {
+func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	if r.Method != http.MethodConnect {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		log.Warn("Method not allowed: %v", r.Method)
 		return
 	} else {
 		statusOK(w)
-	}
-	if clientPasswd, ok := parsedURL.User.Password(); ok {
-		auth := "Basic " + base64.StdEncoding.EncodeToString([]byte(":"+clientPasswd))
-		r.Header.Set("Authorization", auth)
 	}
 	r.Header.Set("User-Agent", getagentID())
 	clientConn, err := hijackConnection(w)
@@ -55,7 +51,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.
 			clientConn.Close()
 		}
 	}()
-	serverConn, err := tls.Dial("tcp", parsedURL.Host, &tls.Config{InsecureSkipVerify: true})
+	serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
 		log.Error("Unable to dial TLS server: %v", err)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

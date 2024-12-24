@@ -17,30 +17,20 @@ func Server(parsedURL *url.URL) error {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
 	server := &http.Server{
-		Addr:     serverAddr,
-		ErrorLog: log.NewLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleServerRequest(w, r, parsedURL)
-		}),
+		Addr:      serverAddr,
+		ErrorLog:  log.NewLogger(),
+		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
 	log.Info("Starting HTTPS server on %v", serverAddr)
 	return server.ListenAndServeTLS("", "")
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL) {
+func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodConnect {
 		statusOK(w)
 		log.Warn("Method not allowed: %v", r.RemoteAddr)
 		return
-	}
-	if serverPasswd, ok := parsedURL.User.Password(); ok {
-		_, clientPasswd, ok := r.BasicAuth()
-		if !ok || clientPasswd != serverPasswd {
-			statusOK(w)
-			log.Warn("Unauthorized: %v", r.RemoteAddr)
-			return
-		}
 	}
 	if r.Header.Get("User-Agent") != getagentID() {
 		statusOK(w)
