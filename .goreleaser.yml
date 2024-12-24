@@ -5,25 +5,11 @@ builds:
       - CGO_ENABLED=0
     main: ./cmd/atlas
     goos:
-      - darwin
-      - freebsd
       - linux
       - windows
     goarch:
-      - 386
-      - arm
       - amd64
       - arm64
-      - mips
-      - mipsle
-      - mips64
-      - mips64le
-    goarm:
-      - 6
-      - 7
-    gomips:
-      - hardfloat
-      - softfloat
     flags:
       - -trimpath
     ldflags:

@@ -12,31 +12,38 @@ import (
 
 func Server(parsedURL *url.URL) error {
 	serverAddr := parsedURL.Host
-	tlsConfig, err := tls.NewTLSconfig(gethijackID())
+	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
 	server := &http.Server{
-		Addr:      serverAddr,
-		ErrorLog:  log.NewLogger(),
-		Handler:   http.HandlerFunc(handleServerRequest),
+		Addr:     serverAddr,
+		ErrorLog: log.NewLogger(),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleServerRequest(w, r, parsedURL)
+		}),
 		TLSConfig: tlsConfig,
 	}
 	log.Info("Starting HTTPS server on %v", serverAddr)
 	return server.ListenAndServeTLS("", "")
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request) {
+func handleServerRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL) {
 	if r.Method != http.MethodConnect {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(r.RemoteAddr))
-		w.(http.Flusher).Flush()
+		statusOK(w)
 		log.Warn("Method not allowed: %v", r.RemoteAddr)
 		return
 	}
-	if r.Header.Get("User-Agent") != gethijackID() {
-		w.WriteHeader(http.StatusOK)
-		w.(http.Flusher).Flush()
+	if serverPasswd, ok := parsedURL.User.Password(); ok {
+		_, clientPasswd, ok := r.BasicAuth()
+		if !ok || clientPasswd != serverPasswd {
+			statusOK(w)
+			log.Warn("Unauthorized: %v", r.RemoteAddr)
+			return
+		}
+	}
+	if r.Header.Get("User-Agent") != getagentID() {
+		statusOK(w)
 	}
 	clientConn, err := hijackConnection(w)
 	if err != nil {
