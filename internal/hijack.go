@@ -3,6 +3,8 @@ package internal
 import (
 	"net"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 func hijackConnection(w http.ResponseWriter) (net.Conn, error) {
@@ -12,4 +14,8 @@ func hijackConnection(w http.ResponseWriter) (net.Conn, error) {
 	}
 	conn, _, err := hijacker.Hijack()
 	return conn, err
+}
+
+func gethijackID() string {
+	return strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
 }

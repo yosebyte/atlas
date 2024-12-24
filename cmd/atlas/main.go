@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/yosebyte/passport/pkg/log"
+	"github.com/yosebyte/x/log"
 )
 
 var version = "dev"

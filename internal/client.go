@@ -2,13 +2,12 @@ package internal
 
 import (
 	"crypto/tls"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
 
-	"github.com/yosebyte/passport/pkg/conn"
-	"github.com/yosebyte/passport/pkg/log"
+	"github.com/yosebyte/x/io"
+	"github.com/yosebyte/x/log"
 )
 
 func Client(parsedURL *url.URL) error {
@@ -35,6 +34,7 @@ func Client(parsedURL *url.URL) error {
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	if r.Method != http.MethodConnect {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Warn("Method not allowed: %v", r.Method)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -44,6 +44,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.Info("Client connected: %v", clientConn.RemoteAddr())
 	defer func() {
 		if clientConn != nil {
 			clientConn.Close()
@@ -55,22 +56,20 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
+	log.Info("Server connected: %v", serverConn.RemoteAddr())
 	defer func() {
 		if serverConn != nil {
 			serverConn.Close()
 		}
 	}()
-	r.Header.Set("User-Agent", "ATLAS")
+	r.Header.Set("User-Agent", gethijackID())
 	if err := r.Write(serverConn); err != nil {
-		log.Error("Unable to write request to server: %v", err)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		log.Error("Unable to write request to server: %v", err)
 		return
 	}
-	if err := conn.DataExchange(clientConn, serverConn); err != nil {
-		if err == io.EOF {
-			log.Info("Connection closed successfully: %v", err)
-		} else {
-			log.Warn("Connection closed unexpectedly: %v", err)
-		}
+	log.Info("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
+	if err := io.DataExchange(clientConn, serverConn); err != nil {
+		log.Info("Connection closed: %v", err)
 	}
 }

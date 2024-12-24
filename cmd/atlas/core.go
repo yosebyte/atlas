@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/yosebyte/atlas/internal"
-	"github.com/yosebyte/passport/pkg/log"
+	"github.com/yosebyte/x/log"
 )
 
 func coreSelect(parsedURL *url.URL) {
