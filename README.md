@@ -4,4 +4,10 @@
 
 # ATLAS
 
-Anonymous Transport Layer Access Service from the Yosebyte Collections.
+Another Transport Layer Access Service from the Yosebyte Collections.
+
+## Usage
+
+```
+atlas <core_mode>://<server_addr>#<access_addr>
+```
