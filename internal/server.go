@@ -62,7 +62,10 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *h
 		}
 	} else {
 		if reverseProxy == nil {
-			reverseProxy = httputil.NewSingleHostReverseProxy(r.URL)
+			reverseProxy = httputil.NewSingleHostReverseProxy(&url.URL{
+				Scheme: "http",
+				Host:   r.URL.Host,
+			})
 		}
 		reverseProxy.ServeHTTP(w, r)
 	}
