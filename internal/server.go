@@ -18,7 +18,8 @@ func NewServer(parsedURL *url.URL) *http.Server {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
 	reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-		Host: parsedURL.Host,
+		Scheme: parsedURL.Scheme,
+		Host:   parsedURL.Host,
 	})
 	return &http.Server{
 		Addr:     serverAddr,
