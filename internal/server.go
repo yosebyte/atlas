@@ -12,17 +12,13 @@ import (
 )
 
 func NewServer(parsedURL *url.URL) *http.Server {
-	serverAddr := parsedURL.Host
+	var reverseProxy *httputil.ReverseProxy
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
-	reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-		Scheme: parsedURL.Scheme,
-		Host:   parsedURL.Host,
-	})
 	return &http.Server{
-		Addr:     serverAddr,
+		Addr:     parsedURL.Host,
 		ErrorLog: log.NewLogger(),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handleServerRequest(w, r, reverseProxy)
@@ -65,6 +61,9 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *h
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
+		if reverseProxy == nil {
+			reverseProxy = httputil.NewSingleHostReverseProxy(r.URL)
+		}
 		reverseProxy.ServeHTTP(w, r)
 	}
 }
