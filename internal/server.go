@@ -3,7 +3,6 @@ package internal
 import (
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
@@ -12,22 +11,19 @@ import (
 )
 
 func NewServer(parsedURL *url.URL) *http.Server {
-	var reverseProxy *httputil.ReverseProxy
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
 	return &http.Server{
-		Addr:     parsedURL.Host,
-		ErrorLog: log.NewLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleServerRequest(w, r, reverseProxy)
-		}),
+		Addr:      parsedURL.Host,
+		ErrorLog:  log.NewLogger(),
+		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *httputil.ReverseProxy) {
+func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
@@ -61,13 +57,8 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *h
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		if reverseProxy == nil {
-			reverseProxy = httputil.NewSingleHostReverseProxy(&url.URL{
-				Scheme: "http",
-				Host:   r.URL.Host,
-			})
-		}
-		r.Host = r.URL.Host
-		reverseProxy.ServeHTTP(w, r)
+		statusOK(w)
+		log.Warn("Unsupported method: %v/%v", r.RemoteAddr, r.Method)
+		return
 	}
 }
