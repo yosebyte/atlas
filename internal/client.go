@@ -10,39 +10,35 @@ import (
 	"github.com/yosebyte/x/log"
 )
 
-func Client(parsedURL *url.URL) error {
+func NewClient(parsedURL *url.URL) *http.Server {
 	serverAddr := parsedURL.Host
 	accessAddr := parsedURL.Fragment
 	if accessAddr == "" {
 		_, port, err := net.SplitHostPort(serverAddr)
 		if err != nil {
-			return err
+			log.Error("Unable to split host and port: %v", err)
+			return nil
 		}
 		accessAddr = net.JoinHostPort("127.0.0.1", port)
 	}
-	server := &http.Server{
+	return &http.Server{
 		Addr:     accessAddr,
 		ErrorLog: log.NewLogger(),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handleClientRequest(w, r, serverAddr)
 		}),
 	}
-	log.Info("Starting HTTP server on %v", accessAddr)
-	return server.ListenAndServe()
 }
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
-	if r.Method != http.MethodConnect {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		log.Warn("Method not allowed: %v", r.Method)
-		return
-	} else {
+	if r.Method == http.MethodConnect {
 		statusOK(w)
 	}
 	r.Header.Set("User-Agent", getagentID())
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error("Unable to hijack connection: %v", err)
 		return
 	}
 	log.Info("Client connected: %v", clientConn.RemoteAddr())
@@ -53,8 +49,8 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 	}()
 	serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
-		log.Error("Unable to dial TLS server: %v", err)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		log.Error("Unable to dial server: %v", err)
 		return
 	}
 	log.Info("Server connected: %v", serverConn.RemoteAddr())

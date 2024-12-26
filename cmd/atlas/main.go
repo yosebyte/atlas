@@ -3,6 +3,8 @@ package main
 import (
 	"net/url"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/yosebyte/x/log"
 )
@@ -19,5 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to parse raw URL: %v", err)
 	}
-	coreSelect(parsedURL)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	coreSelect(parsedURL, stop)
 }

@@ -10,26 +10,24 @@ import (
 	"github.com/yosebyte/x/tls"
 )
 
-func Server(parsedURL *url.URL) error {
+func NewServer(parsedURL *url.URL) *http.Server {
 	serverAddr := parsedURL.Host
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
-	server := &http.Server{
+	return &http.Server{
 		Addr:      serverAddr,
 		ErrorLog:  log.NewLogger(),
 		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
-	log.Info("Starting HTTPS server on %v", serverAddr)
-	return server.ListenAndServeTLS("", "")
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodConnect {
 		statusOK(w)
-		log.Warn("Method not allowed: %v", r.RemoteAddr)
+		log.Warn("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
 	if r.Header.Get("User-Agent") != getagentID() {
