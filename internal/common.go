@@ -17,7 +17,7 @@ func hijackConnection(w http.ResponseWriter) (net.Conn, error) {
 }
 
 func getagentID() string {
-	return strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
+	return "agent/" + strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
 }
 
 func statusOK(w http.ResponseWriter) {
