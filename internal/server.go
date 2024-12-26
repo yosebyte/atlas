@@ -67,6 +67,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *h
 				Host:   r.URL.Host,
 			})
 		}
+		r.Host = r.URL.Host
 		reverseProxy.ServeHTTP(w, r)
 	}
 }
