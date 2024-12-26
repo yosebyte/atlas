@@ -64,11 +64,6 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, reverseProxy *h
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		if r.Header.Get("User-Agent") != getagentID() {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			log.Warn("Invalid request: %v", r.RemoteAddr)
-			return
-		}
 		reverseProxy.ServeHTTP(w, r)
 	}
 }
