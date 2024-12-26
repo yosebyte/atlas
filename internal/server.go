@@ -25,11 +25,6 @@ func NewServer(parsedURL *url.URL) *http.Server {
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodConnect {
-		statusOK(w)
-		log.Warn("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
-		return
-	}
 	if r.Header.Get("User-Agent") != getagentID() {
 		statusOK(w)
 	}
