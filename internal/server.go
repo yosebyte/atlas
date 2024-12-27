@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bufio"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -25,23 +26,29 @@ func NewServer(parsedURL *url.URL) *http.Server {
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodConnect {
-		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
+	clientConn, err := hijackConnection(w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error("Unable to hijack connection: %v", err)
+		return
+	}
+	log.Info("Client connected: %v", clientConn.RemoteAddr())
+	defer func() {
+		if clientConn != nil {
+			clientConn.Close()
+		}
+	}()
+	req, err := http.ReadRequest(bufio.NewReader(clientConn))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Error("Unable to read request: %v", err)
+		return
+	}
+	if req.Method == http.MethodConnect {
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
+			log.Info("User-Agent: %v", r.Header.Get("User-Agent"))
 		}
-		clientConn, err := hijackConnection(w)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Error("Unable to hijack connection: %v", err)
-			return
-		}
-		log.Info("Client connected: %v", clientConn.RemoteAddr())
-		defer func() {
-			if clientConn != nil {
-				clientConn.Close()
-			}
-		}()
 		targetConn, err := net.Dial("tcp", r.URL.Host)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -59,16 +66,15 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
-			log.Warn("Invalid User-Agent: %v", r.Header.Get("User-Agent"))
+			log.Info("User-Agent: %v", r.Header.Get("User-Agent"))
 			return
 		}
 		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
-			Host:   r.Host,
+			Host:   req.Host,
 		})
-		proxy.ServeHTTP(w, r)
+		proxy.ServeHTTP(w, req)
 	}
 }
