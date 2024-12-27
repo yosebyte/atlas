@@ -59,11 +59,16 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Debug("Connection closed: %v", err)
 		}
 	} else {
-		log.Debug("Handling HTTP request: %v", r.URL)
+		log.Debug("HTTP request: %v", r.URL)
 		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   r.Host,
 		})
+		reverseProxy.ErrorLog = log.NewLogger()
+		reverseProxy.ModifyResponse = func(response *http.Response) error {
+			log.Debug("HTTP response: %v", response.Status)
+			return nil
+		}
 		reverseProxy.ServeHTTP(w, r)
 	}
 }
