@@ -1,8 +1,6 @@
 package internal
 
 import (
-	"bufio"
-	"crypto/tls"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -10,47 +8,40 @@ import (
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
+	"github.com/yosebyte/x/tls"
 )
 
-func NewServer(parsedURL *url.URL, tlsConfig *tls.Config) *http.Server {
+func NewServer(parsedURL *url.URL) *http.Server {
+	tlsConfig, err := tls.NewTLSconfig(getagentID())
+	if err != nil {
+		log.Fatal("Unable to generate TLS config: %v", err)
+	}
 	return &http.Server{
-		Addr:     parsedURL.Host,
-		ErrorLog: log.NewLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleServerRequest(w, r, tlsConfig)
-		}),
+		Addr:      parsedURL.Host,
+		ErrorLog:  log.NewLogger(),
+		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, tlsConfig *tls.Config) {
-	clientConn, err := hijackConnection(w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error("Unable to hijack connection: %v", err)
-		return
-	}
-	log.Info("Client connected: %v", clientConn.RemoteAddr())
-	defer func() {
-		if clientConn != nil {
-			clientConn.Close()
-		}
-	}()
-	if _, ok := clientConn.(*tls.Conn); ok {
-		clientConn = tls.Server(clientConn, tlsConfig)
-		log.Info("TLS connection decrypted: %v", clientConn.RemoteAddr())
-	}
-	req, err := http.ReadRequest(bufio.NewReader(clientConn))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Error("Unable to read request: %v", err)
-		return
-	}
-	if req.Method == http.MethodConnect {
+func handleServerRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodConnect {
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
 			log.Info("User-Agent: %v", r.Header.Get("User-Agent"))
 		}
+		clientConn, err := hijackConnection(w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error("Unable to hijack connection: %v", err)
+			return
+		}
+		log.Info("Client connected: %v", clientConn.RemoteAddr())
+		defer func() {
+			if clientConn != nil {
+				clientConn.Close()
+			}
+		}()
 		targetConn, err := net.Dial("tcp", r.URL.Host)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -68,15 +59,10 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, tlsConfig *tls.
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		if r.Header.Get("User-Agent") != getagentID() {
-			statusOK(w)
-			log.Warn("User-Agent: %v", r.Header.Get("User-Agent"))
-			return
-		}
-		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
-			Host:   req.Host,
+			Host:   r.Host,
 		})
-		proxy.ServeHTTP(w, req)
+		reverseProxy.ServeHTTP(w, r)
 	}
 }
