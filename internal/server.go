@@ -68,7 +68,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
-			log.Info("User-Agent: %v", r.Header.Get("User-Agent"))
+			log.Warn("User-Agent: %v", r.Header.Get("User-Agent"))
 			return
 		}
 		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
