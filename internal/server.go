@@ -3,6 +3,7 @@ package internal
 import (
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
@@ -57,8 +58,12 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		statusOK(w)
-		log.Warn("Unsupported method: %v/%v", r.RemoteAddr, r.Method)
-		return
+		if r.Header.Get("User-Agent") != getagentID() {
+			statusOK(w)
+			log.Warn("Invalid request: %v", r.RemoteAddr)
+			return
+		}
+		proxy := httputil.NewSingleHostReverseProxy(r.URL)
+		proxy.ServeHTTP(w, r)
 	}
 }
