@@ -26,6 +26,7 @@ func NewServer(parsedURL *url.URL) *http.Server {
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
+		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
 		}
@@ -58,6 +59,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
+		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
 			log.Warn("Invalid User-Agent: %v", r.Header.Get("User-Agent"))
