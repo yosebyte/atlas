@@ -35,13 +35,14 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		statusOK(w)
 	}
 	r.Header.Set("User-Agent", getagentID())
+	log.Warn("User-Agent: %v", r.Header.Get("User-Agent"))
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error("Unable to hijack connection: %v", err)
 		return
 	}
-	log.Info("Client connected: %v", clientConn.RemoteAddr())
+	log.Debug("Client connected: %v", clientConn.RemoteAddr())
 	defer func() {
 		if clientConn != nil {
 			clientConn.Close()
@@ -53,7 +54,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		log.Error("Unable to dial server: %v", err)
 		return
 	}
-	log.Info("Server connected: %v", serverConn.RemoteAddr())
+	log.Debug("Server connected: %v", serverConn.RemoteAddr())
 	defer func() {
 		if serverConn != nil {
 			serverConn.Close()
@@ -64,8 +65,8 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		log.Error("Unable to write request to server: %v", err)
 		return
 	}
-	log.Info("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
+	log.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
 	if err := io.DataExchange(clientConn, serverConn); err != nil {
-		log.Info("Connection closed: %v", err)
+		log.Debug("Connection closed: %v", err)
 	}
 }

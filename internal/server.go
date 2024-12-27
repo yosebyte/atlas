@@ -26,9 +26,9 @@ func NewServer(parsedURL *url.URL) *http.Server {
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
+		log.Warn("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
-			log.Info("User-Agent: %v", r.Header.Get("User-Agent"))
 		}
 		clientConn, err := hijackConnection(w)
 		if err != nil {
@@ -36,7 +36,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Error("Unable to hijack connection: %v", err)
 			return
 		}
-		log.Info("Client connected: %v", clientConn.RemoteAddr())
+		log.Debug("Client connected: %v", clientConn.RemoteAddr())
 		defer func() {
 			if clientConn != nil {
 				clientConn.Close()
@@ -48,17 +48,18 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Error("Unable to dial target: %v", err)
 			return
 		}
-		log.Info("Target connected: %v", targetConn.RemoteAddr())
+		log.Debug("Target connected: %v", targetConn.RemoteAddr())
 		defer func() {
 			if targetConn != nil {
 				targetConn.Close()
 			}
 		}()
-		log.Info("Connection established: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
+		log.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
 		if err := io.DataExchange(clientConn, targetConn); err != nil {
-			log.Info("Connection closed: %v", err)
+			log.Debug("Connection closed: %v", err)
 		}
 	} else {
+		log.Debug("Handling HTTP request: %v", r.URL)
 		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   r.Host,
