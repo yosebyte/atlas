@@ -30,7 +30,7 @@ func runServer(parsedURL *url.URL) {
 		}
 }
 
-func runClient(parsedURL *url.URL, stop chan os.Signal) {
+func runClient(parsedURL *url.URL) {
 	log.Info("Client started: %v", parsedURL.String())
 	client := internal.NewClient(parsedURL)
 	if err := client.ListenAndServe(); err != nil {
