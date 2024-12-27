@@ -33,7 +33,7 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 	}()
 	<-stop
 	log.Info("Server stopping")
-	if err := server.Shutdown(context.TODO()); err != nil {
+	if err := server.Shutdown(context.Background()); err != nil {
 		log.Error("Server shutdown error: %v", err)
 	}
 	log.Info("Server stopped")
@@ -49,7 +49,7 @@ func runClient(parsedURL *url.URL, stop chan os.Signal) {
 	}()
 	<-stop
 	log.Info("Client stopping")
-	if err := client.Shutdown(context.TODO()); err != nil {
+	if err := client.Shutdown(context.Background()); err != nil {
 		log.Error("Client shutdown error: %v", err)
 	}
 	log.Info("Client stopped")
