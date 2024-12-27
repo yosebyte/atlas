@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bufio"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -9,23 +10,20 @@ import (
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
-	"github.com/yosebyte/x/tls"
 )
 
-func NewServer(parsedURL *url.URL) *http.Server {
-	tlsConfig, err := tls.NewTLSconfig(getagentID())
-	if err != nil {
-		log.Fatal("Unable to generate TLS config: %v", err)
-	}
+func NewServer(parsedURL *url.URL, tlsConfig *tls.Config) *http.Server {
 	return &http.Server{
-		Addr:      parsedURL.Host,
-		ErrorLog:  log.NewLogger(),
-		Handler:   http.HandlerFunc(handleServerRequest),
+		Addr:     parsedURL.Host,
+		ErrorLog: log.NewLogger(),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			handleServerRequest(w, r, tlsConfig)
+		}),
 		TLSConfig: tlsConfig,
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request) {
+func handleServerRequest(w http.ResponseWriter, r *http.Request, tlsConfig *tls.Config) {
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -38,6 +36,10 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			clientConn.Close()
 		}
 	}()
+	if _, ok := clientConn.(*tls.Conn); ok {
+		clientConn = tls.Server(clientConn, tlsConfig)
+		log.Info("TLS connection decrypted: %v", clientConn.RemoteAddr())
+	}
 	req, err := http.ReadRequest(bufio.NewReader(clientConn))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
