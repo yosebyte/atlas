@@ -58,12 +58,10 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Info("Connection closed: %v", err)
 		}
 	} else {
-		if r.Header.Get("User-Agent") != getagentID() {
-			statusOK(w)
-			log.Warn("Invalid request: %v", r.RemoteAddr)
-			return
-		}
-		proxy := httputil.NewSingleHostReverseProxy(r.URL)
+		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+		})
 		proxy.ServeHTTP(w, r)
 	}
 }
