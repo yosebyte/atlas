@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"net/http"
 	"net/url"
 	"os"
 
@@ -8,12 +10,12 @@ import (
 	"github.com/yosebyte/x/log"
 )
 
-func coreSelect(parsedURL *url.URL) {
+func coreSelect(parsedURL *url.URL, stop chan os.Signal) {
 	switch parsedURL.Scheme {
 	case "server":
-		server(parsedURL)
+		runServer(parsedURL, stop)
 	case "client":
-		client(parsedURL)
+		runClient(parsedURL, stop)
 	default:
 		log.Error("Invalid scheme: %v", parsedURL.Scheme)
 		helpInfo()
@@ -21,16 +23,34 @@ func coreSelect(parsedURL *url.URL) {
 	}
 }
 
-func server(parsedURL *url.URL) {
+func runServer(parsedURL *url.URL, stop chan os.Signal) {
 	log.Info("Server started: %v", parsedURL.String())
-	if err := internal.RunServer(parsedURL); err != nil {
+	server := internal.NewServer(parsedURL)
+	go func() {
+		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			log.Error("Server error: %v", err)
 		}
+	}()
+	<-stop
+	log.Info("Server stopping")
+	if err := server.Shutdown(context.Background()); err != nil {
+		log.Error("Server shutdown error: %v", err)
+	}
+	log.Info("Server stopped")
 }
 
-func client(parsedURL *url.URL) {
+func runClient(parsedURL *url.URL, stop chan os.Signal) {
 	log.Info("Client started: %v", parsedURL.String())
-	if err := internal.RunClient(parsedURL); err != nil {
+	client := internal.NewClient(parsedURL)
+	go func() {
+		if err := client.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Error("Client error: %v", err)
 		}
+	}()
+	<-stop
+	log.Info("Client stopping")
+	if err := client.Shutdown(context.Background()); err != nil {
+		log.Error("Client shutdown error: %v", err)
+	}
+	log.Info("Client stopped")
 }

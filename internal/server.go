@@ -3,6 +3,7 @@ package internal
 import (
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
@@ -10,19 +11,17 @@ import (
 	"github.com/yosebyte/x/tls"
 )
 
-func RunServer(parsedURL *url.URL) error {
-	serverAddr := parsedURL.Host
+func NewServer(parsedURL *url.URL) *http.Server {
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
-	server := &http.Server{
-		Addr:      serverAddr,
+	return &http.Server{
+		Addr:      parsedURL.Host,
 		ErrorLog:  log.NewLogger(),
 		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
-	return server.ListenAndServeTLS("", "")
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +59,16 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Debug("Connection closed: %v", err)
 		}
 	} else {
-		statusOK(w)
+		log.Debug("HTTP request: %v", r.URL)
+		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+		})
+		reverseProxy.ErrorLog = log.NewLogger()
+		reverseProxy.ModifyResponse = func(response *http.Response) error {
+			log.Debug("HTTP response: %v", response.Status)
+			return nil
+		}
+		reverseProxy.ServeHTTP(w, r)
 	}
 }
