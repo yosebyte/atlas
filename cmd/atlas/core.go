@@ -11,9 +11,9 @@ import (
 func coreSelect(parsedURL *url.URL) {
 	switch parsedURL.Scheme {
 	case "server":
-		runServer(parsedURL)
+		server(parsedURL)
 	case "client":
-		runClient(parsedURL)
+		client(parsedURL)
 	default:
 		log.Error("Invalid scheme: %v", parsedURL.Scheme)
 		helpInfo()
@@ -21,18 +21,16 @@ func coreSelect(parsedURL *url.URL) {
 	}
 }
 
-func runServer(parsedURL *url.URL) {
+func server(parsedURL *url.URL) {
 	log.Info("Server started: %v", parsedURL.String())
-	server := internal.NewServer(parsedURL)
-	if err := server.ListenAndServeTLS("", ""); err != nil {
+	if err := internal.runServer(parsedURL); err != nil {
 			log.Error("Server error: %v", err)
 		}
 }
 
-func runClient(parsedURL *url.URL) {
+func client(parsedURL *url.URL) {
 	log.Info("Client started: %v", parsedURL.String())
-	client := internal.NewClient(parsedURL)
-	if err := client.ListenAndServe(); err != nil {
+	if err := internal.runClient(parsedURL); err != nil {
 			log.Error("Client error: %v", err)
 		}
 }

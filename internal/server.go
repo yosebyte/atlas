@@ -10,55 +10,65 @@ import (
 	"github.com/yosebyte/x/tls"
 )
 
-func NewServer(parsedURL *url.URL) *http.Server {
+func runServer(parsedURL *url.URL) error {
+	serverAddr := parsedURL.Host
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
 		log.Fatal("Unable to generate TLS config: %v", err)
 	}
-	return &http.Server{
-		Addr:      parsedURL.Host,
+	server := &http.Server{
+		Addr:      serverAddr,
 		ErrorLog:  log.NewLogger(),
 		Handler:   http.HandlerFunc(handleServerRequest),
 		TLSConfig: tlsConfig,
 	}
+	return server.ListenAndServeTLS("", "")
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodConnect {
-		statusOK(w)
-		log.Warn("Invalid method: %v/%v", r.RemoteAddr, r.Method)
-		return
-	}
-	log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
-	if r.Header.Get("User-Agent") != getagentID() {
-		statusOK(w)
-	}
-	clientConn, err := hijackConnection(w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error("Unable to hijack connection: %v", err)
-		return
-	}
-	log.Debug("Client connected: %v", clientConn.RemoteAddr())
-	defer func() {
-		if clientConn != nil {
-			clientConn.Close()
+		if r.Header.Get("User-Agent") != getagentID() {
+			statusOK(w)
 		}
-	}()
-	targetConn, err := net.Dial("tcp", r.URL.Host)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		log.Error("Unable to dial target: %v", err)
-		return
-	}
-	log.Debug("Target connected: %v", targetConn.RemoteAddr())
-	defer func() {
-		if targetConn != nil {
-			targetConn.Close()
+		clientConn, err := hijackConnection(w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error("Unable to hijack connection: %v", err)
+			return
 		}
-	}()
-	log.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
-	if err := io.DataExchange(clientConn, targetConn); err != nil {
-		log.Debug("Connection closed: %v", err)
+		log.Debug("Client connected: %v", clientConn.RemoteAddr())
+		defer func() {
+			if clientConn != nil {
+				clientConn.Close()
+			}
+		}()
+		targetConn, err := net.Dial("tcp", r.URL.Host)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			log.Error("Unable to dial target: %v", err)
+			return
+		}
+		log.Debug("Target connected: %v", targetConn.RemoteAddr())
+		defer func() {
+			if targetConn != nil {
+				targetConn.Close()
+			}
+		}()
+		log.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
+		if err := io.DataExchange(clientConn, targetConn); err != nil {
+			log.Debug("Connection closed: %v", err)
+		}
+	} else {
+		log.Debug("HTTP request: %v", r.URL)
+		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+		})
+		reverseProxy.ErrorLog = log.NewLogger()
+		reverseProxy.ModifyResponse = func(response *http.Response) error {
+			log.Debug("HTTP response: %v", response.Status)
+			return nil
+		}
+		reverseProxy.ServeHTTP(w, r)
 	}
 }
