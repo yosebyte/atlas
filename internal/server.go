@@ -3,6 +3,7 @@ package internal
 import (
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"

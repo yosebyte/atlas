@@ -4,14 +4,13 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
 )
 
-func runClient(parsedURL *url.URL) *http.Server {
+func runClient(parsedURL *url.URL) error {
 	serverAddr := parsedURL.Host
 	accessAddr := parsedURL.Fragment
 	if accessAddr == "" {
