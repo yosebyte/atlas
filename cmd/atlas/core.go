@@ -23,14 +23,14 @@ func coreSelect(parsedURL *url.URL) {
 
 func server(parsedURL *url.URL) {
 	log.Info("Server started: %v", parsedURL.String())
-	if err := internal.runServer(parsedURL); err != nil {
+	if err := internal.RunServer(parsedURL); err != nil {
 			log.Error("Server error: %v", err)
 		}
 }
 
 func client(parsedURL *url.URL) {
 	log.Info("Client started: %v", parsedURL.String())
-	if err := internal.runClient(parsedURL); err != nil {
+	if err := internal.RunClient(parsedURL); err != nil {
 			log.Error("Client error: %v", err)
 		}
 }

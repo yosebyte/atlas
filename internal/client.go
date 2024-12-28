@@ -10,7 +10,7 @@ import (
 	"github.com/yosebyte/x/log"
 )
 
-func runClient(parsedURL *url.URL) error {
+func RunClient(parsedURL *url.URL) error {
 	serverAddr := parsedURL.Host
 	accessAddr := parsedURL.Fragment
 	if accessAddr == "" {

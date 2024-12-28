@@ -11,7 +11,7 @@ import (
 	"github.com/yosebyte/x/tls"
 )
 
-func runServer(parsedURL *url.URL) error {
+func RunServer(parsedURL *url.URL) error {
 	serverAddr := parsedURL.Host
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
