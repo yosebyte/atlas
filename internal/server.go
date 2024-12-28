@@ -26,7 +26,7 @@ func RunServer(parsedURL *url.URL) error {
 }
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodConnect {
+	if r.Method == http.MethodConnect {
 		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
