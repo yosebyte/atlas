@@ -3,7 +3,6 @@ package internal
 import (
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
@@ -59,16 +58,8 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Debug("Connection closed: %v", err)
 		}
 	} else {
-		log.Debug("HTTP request: %v", r.URL)
-		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-			Scheme: "http",
-			Host:   r.Host,
-		})
-		reverseProxy.ErrorLog = log.NewLogger()
-		reverseProxy.ModifyResponse = func(response *http.Response) error {
-			log.Debug("HTTP response: %v", response.Status)
-			return nil
-		}
-		reverseProxy.ServeHTTP(w, r)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Warn("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
+		return
 	}
 }
