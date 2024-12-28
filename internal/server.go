@@ -3,7 +3,6 @@ package internal
 import (
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
@@ -28,6 +27,7 @@ func RunServer(parsedURL *url.URL) error {
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodConnect {
+		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
 			statusOK(w)
 		}
@@ -60,16 +60,6 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 			log.Debug("Connection closed: %v", err)
 		}
 	} else {
-		log.Debug("HTTP request: %v", r.URL)
-		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-			Scheme: "http",
-			Host:   r.Host,
-		})
-		reverseProxy.ErrorLog = log.NewLogger()
-		reverseProxy.ModifyResponse = func(response *http.Response) error {
-			log.Debug("HTTP response: %v", response.Status)
-			return nil
-		}
-		reverseProxy.ServeHTTP(w, r)
+		statusOK(w)
 	}
 }
