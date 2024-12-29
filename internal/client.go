@@ -33,7 +33,7 @@ func NewClient(parsedURL *url.URL) *http.Server {
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	if r.Method == http.MethodConnect {
-		statusOK(w)
+		http.Error(w, "Connection Established", http.StatusOK)
 		r.Header.Set("User-Agent", getagentID())
 		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)

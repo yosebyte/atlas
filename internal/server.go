@@ -27,7 +27,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
 		log.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		if r.Header.Get("User-Agent") != getagentID() {
-			statusOK(w)
+			http.Error(w, "Connection Established", http.StatusOK)
 		}
 		clientConn, err := hijackConnection(w)
 		if err != nil {
