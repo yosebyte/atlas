@@ -9,15 +9,14 @@ import (
 	"github.com/yosebyte/atlas/internal"
 )
 
-func coreSelect(parsedURL *url.URL, stop chan os.Signal) {
+func executeCore(parsedURL *url.URL, stop chan os.Signal) {
 	switch parsedURL.Scheme {
 	case "server":
 		runServer(parsedURL, stop)
 	case "client":
 		runClient(parsedURL, stop)
 	default:
-		logger.Error("Invalid scheme: %v", parsedURL.Scheme)
-		usage()
+		showExitInfo()
 	}
 }
 

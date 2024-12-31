@@ -11,31 +11,67 @@ import (
 )
 
 var (
+	logger  *log.Logger
 	version = "dev"
-	logger  = log.NewLogger(log.Info, true)
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		usage()
-	}
-	rawURL := os.Args[1]
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		logger.Fatal("Unable to parse raw URL: %v", err)
-	}
-	if parsedURL.Query().Has("debug") {
-		logger.SetLogLevel(log.Debug)
-		logger.Debug("Debug logging enabled")
-	}
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	coreSelect(parsedURL, stop)
+func init() {
+	logger = log.NewLogger(log.Info, true)
 }
 
-func usage() {
-	logger.Fatal(`Version: %v %v/%v
+func main() {
+	stop := setupSignalHandler()
+	parsedURL := parseArgs(os.Args)
+	setLogLevel(parsedURL.Query().Get("log"))
+	executeCore(parsedURL, stop)
+}
 
-Usage: atlas <core_mode>://<server_addr>#<access_addr>(?debug)
+func setupSignalHandler() chan os.Signal {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	return stop
+}
+
+func parseArgs(args []string) *url.URL {
+	if len(args) < 2 {
+		showExitInfo()
+	}
+	parsedURL, err := url.Parse(args[1])
+	if err != nil {
+		logger.Fatal("URL parse error: %v", err)
+		os.Exit(1)
+	}
+	return parsedURL
+}
+
+func setLogLevel(level string) {
+	switch level {
+	case "debug":
+		logger.SetLogLevel(log.Debug)
+		logger.Debug("Log level: DEBUG")
+	case "info":
+		logger.SetLogLevel(log.Info)
+		logger.Info("Log level: INFO")
+	case "warn":
+		logger.SetLogLevel(log.Warn)
+		logger.Warn("Log level: WARN")
+	case "error":
+		logger.SetLogLevel(log.Error)
+		logger.Error("Log level: ERROR")
+	case "fatal":
+		logger.SetLogLevel(log.Fatal)
+		logger.Fatal("Log level: FATAL")
+	default:
+		logger.SetLogLevel(log.Info)
+		logger.Info("Default level: INFO")
+	}
+}
+
+func showExitInfo() {
+	logger.SetLogLevel(log.Info)
+	logger.Info(`Version: %v %v/%v
+
+Usage: atlas <core_mode>://<server_addr>#<access_addr>?<log=level>
 `, version, runtime.GOOS, runtime.GOARCH)
+	os.Exit(1)
 }
