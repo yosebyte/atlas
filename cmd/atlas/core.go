@@ -21,7 +21,7 @@ func executeCore(parsedURL *url.URL, stop chan os.Signal) {
 }
 
 func runServer(parsedURL *url.URL, stop chan os.Signal) {
-	logger.Info("Server started: %v", parsedURL.String())
+	logger.Info("Server started: %v", parsedURL.Host)
 	server := internal.NewServer(parsedURL, logger)
 	go func() {
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
@@ -37,7 +37,7 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 }
 
 func runClient(parsedURL *url.URL, stop chan os.Signal) {
-	logger.Info("Client started: %v", parsedURL.String())
+	logger.Info("Client started: %v", parsedURL.Host)
 	client := internal.NewClient(parsedURL, logger)
 	go func() {
 		if err := client.ListenAndServe(); err != nil && err != http.ErrServerClosed {

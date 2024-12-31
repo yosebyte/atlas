@@ -22,7 +22,7 @@ func init() {
 func main() {
 	stop := setupSignalHandler()
 	parsedURL := parseArgs(os.Args)
-	setLogLevel(parsedURL.Query().Get("log"))
+	initLogLevel(parsedURL.Query().Get("log"))
 	executeCore(parsedURL, stop)
 }
 
@@ -44,26 +44,23 @@ func parseArgs(args []string) *url.URL {
 	return parsedURL
 }
 
-func setLogLevel(level string) {
+func initLogLevel(level string) {
 	switch level {
 	case "debug":
 		logger.SetLogLevel(log.Debug)
-		logger.Debug("Log level: DEBUG")
-	case "info":
-		logger.SetLogLevel(log.Info)
-		logger.Info("Log level: INFO")
+		logger.Debug("Log level init: DEBUG")
 	case "warn":
 		logger.SetLogLevel(log.Warn)
-		logger.Warn("Log level: WARN")
+		logger.Warn("Log level init: WARN")
 	case "error":
 		logger.SetLogLevel(log.Error)
-		logger.Error("Log level: ERROR")
+		logger.Error("Log level init: ERROR")
 	case "fatal":
 		logger.SetLogLevel(log.Fatal)
-		logger.Fatal("Log level: FATAL")
+		logger.Fatal("Log level init: FATAL")
 	default:
 		logger.SetLogLevel(log.Info)
-		logger.Info("Default level: INFO")
+		logger.Info("Log level init: INFO")
 	}
 }
 
