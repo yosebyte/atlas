@@ -9,14 +9,14 @@ import (
 	"github.com/yosebyte/atlas/internal"
 )
 
-func executeCore(parsedURL *url.URL, stop chan os.Signal) {
+func coreManagement(parsedURL *url.URL, stop chan os.Signal) {
 	switch parsedURL.Scheme {
 	case "server":
 		runServer(parsedURL, stop)
 	case "client":
 		runClient(parsedURL, stop)
 	default:
-		showExitInfo()
+		getExitInfo()
 	}
 }
 
