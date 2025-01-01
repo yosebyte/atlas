@@ -10,31 +10,24 @@ import (
 	"github.com/yosebyte/x/log"
 )
 
-var (
-	logger  *log.Logger
-	version = "dev"
-)
-
-func init() {
-	logger = log.NewLogger(log.Info, true)
-}
+var version = "dev"
 
 func main() {
-	stop := setupSignalHandler()
-	parsedURL := parseArgs(os.Args)
+	logger := log.NewLogger(log.Info, true)
+	parsedURL := getParsedURL(os.Args)
 	initLogLevel(parsedURL.Query().Get("log"))
-	executeCore(parsedURL, stop)
+	coreManagement(parsedURL, getStopSignal())
 }
 
-func setupSignalHandler() chan os.Signal {
+func getStopSignal() chan os.Signal {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	return stop
 }
 
-func parseArgs(args []string) *url.URL {
+func getParsedURL(args []string) *url.URL {
 	if len(args) < 2 {
-		showExitInfo()
+		getExitInfo()
 	}
 	parsedURL, err := url.Parse(args[1])
 	if err != nil {
@@ -64,7 +57,7 @@ func initLogLevel(level string) {
 	}
 }
 
-func showExitInfo() {
+func getExitInfo() {
 	logger.SetLogLevel(log.Info)
 	logger.Info(`Version: %v %v/%v
 
