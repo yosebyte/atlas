@@ -10,10 +10,12 @@ import (
 	"github.com/yosebyte/x/log"
 )
 
-var version = "dev"
+var (
+	logger  = log.NewLogger(log.Info, true)
+	version = "dev"
+)
 
 func main() {
-	logger := log.NewLogger(log.Info, true)
 	parsedURL := getParsedURL(os.Args)
 	initLogLevel(parsedURL.Query().Get("log"))
 	coreManagement(parsedURL, getStopSignal())
@@ -31,7 +33,7 @@ func getParsedURL(args []string) *url.URL {
 	}
 	parsedURL, err := url.Parse(args[1])
 	if err != nil {
-		logger.Fatal("URL parse error: %v", err)
+		logger.Fatal("URL parse: %v", err)
 		os.Exit(1)
 	}
 	return parsedURL
