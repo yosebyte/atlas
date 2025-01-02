@@ -13,7 +13,7 @@ import (
 func NewServer(parsedURL *url.URL, logger *log.Logger) *http.Server {
 	tlsConfig, err := tls.NewTLSconfig(getagentID())
 	if err != nil {
-		logger.Fatal("Unable to generate TLS config: %v", err)
+		logger.Error("Unable to generate TLS config: %v", err)
 	}
 	return &http.Server{
 		Addr:     parsedURL.Host,
@@ -61,7 +61,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 		}
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		logger.Warn("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
+		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
 }

@@ -18,7 +18,7 @@ var (
 func main() {
 	parsedURL := getParsedURL(os.Args)
 	initLogLevel(parsedURL.Query().Get("log"))
-	coreManagement(parsedURL, getStopSignal())
+	coreDispatch(parsedURL, getStopSignal())
 }
 
 func getStopSignal() chan os.Signal {
@@ -34,7 +34,7 @@ func getParsedURL(args []string) *url.URL {
 	parsedURL, err := url.Parse(args[1])
 	if err != nil {
 		logger.Fatal("URL parse: %v", err)
-		os.Exit(1)
+		getExitInfo()
 	}
 	return parsedURL
 }
@@ -43,19 +43,19 @@ func initLogLevel(level string) {
 	switch level {
 	case "debug":
 		logger.SetLogLevel(log.Debug)
-		logger.Debug("Log level init: DEBUG")
+		logger.Debug("Init log level: DEBUG")
 	case "warn":
 		logger.SetLogLevel(log.Warn)
-		logger.Warn("Log level init: WARN")
+		logger.Warn("Init log level: WARN")
 	case "error":
 		logger.SetLogLevel(log.Error)
-		logger.Error("Log level init: ERROR")
+		logger.Error("Init log level: ERROR")
 	case "fatal":
 		logger.SetLogLevel(log.Fatal)
-		logger.Fatal("Log level init: FATAL")
+		logger.Fatal("Init log level: FATAL")
 	default:
 		logger.SetLogLevel(log.Info)
-		logger.Info("Log level init: INFO")
+		logger.Info("Init log level: INFO")
 	}
 }
 
@@ -63,7 +63,15 @@ func getExitInfo() {
 	logger.SetLogLevel(log.Info)
 	logger.Info(`Version: %v %v/%v
 
-Usage: atlas <core_mode>://<server_addr>#<access_addr>?<log=level>
+Usage: 
+    atlas <core_mode>://<server_addr>#<access_addr>?<log=level>
+
+Examples:
+    # Run as server
+    atlas server://10.1.0.1:10101?log=debug
+
+    # Run as client
+    atlas client://10.1.0.1:10101#127.0.0.1:8080
 `, version, runtime.GOOS, runtime.GOARCH)
 	os.Exit(1)
 }

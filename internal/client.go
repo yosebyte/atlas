@@ -70,7 +70,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		}
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		logger.Warn("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
+		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
 }
