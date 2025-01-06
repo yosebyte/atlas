@@ -64,7 +64,7 @@ func getExitInfo() {
 	logger.Info(`Version: %v %v/%v
 
 Usage: 
-    atlas <core_mode>://<server_addr>#<access_addr>?<log=level>
+    atlas <core_mode>://<server_addr>?<log=level>#<access_addr>
 
 Examples:
     # Run as server
