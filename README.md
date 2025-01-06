@@ -9,7 +9,7 @@ Another Transport Layer Access Service from the Yosebyte Collections.
 ## Usage
 
 ```
-atlas <core_mode>://<server_addr>#<access_addr>?<log=level>
+atlas <core_mode>://<server_addr>?<log=level>#<access_addr>
 
 # Run as server
 atlas server://10.1.0.1:10101?log=debug
