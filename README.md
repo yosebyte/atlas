@@ -9,11 +9,11 @@ Another Transport Layer Access Service from the Yosebyte Collections.
 ## Usage
 
 ```
-atlas <core_mode>://<server_addr>?<log=level>#<access_addr>
+atlas <core_mode>://<server_addr>/<access_addr>?<log=level>
 
 # Run as server
 atlas server://10.1.0.1:10101?log=debug
 
 # Run as client
-atlas client://10.1.0.1:10101#127.0.0.1:8080
+atlas client://10.1.0.1:10101/127.0.0.1:8080
 ```
