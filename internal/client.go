@@ -2,7 +2,8 @@ package internal
 
 import (
 	"crypto/tls"
-	"net"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,15 +16,9 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 	serverAddr := parsedURL.Host
 	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
 	if accessAddr == "" {
-		_, port, err := net.SplitHostPort(serverAddr)
-		if err != nil {
-			logger.Error("Unable to split host and port: %v", err)
-			return nil
-		}
-		accessAddr = net.JoinHostPort("127.0.0.1", port)
-		if accessAddr == serverAddr {
-			accessAddr = net.JoinHostPort("127.0.0.2", port)
-		}
+		ip := fmt.Sprintf("127.0.0.%d", rand.Intn(255))
+		port := rand.Intn(7169) + 1024
+		accessAddr = fmt.Sprintf("%s:%d", ip, port)
 	}
 	return &http.Server{
 		Addr:     accessAddr,
