@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
@@ -12,7 +13,7 @@ import (
 
 func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 	serverAddr := parsedURL.Host
-	accessAddr := parsedURL.Fragment
+	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
 	if accessAddr == "" {
 		_, port, err := net.SplitHostPort(serverAddr)
 		if err != nil {
@@ -20,6 +21,9 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 			return nil
 		}
 		accessAddr = net.JoinHostPort("127.0.0.1", port)
+		if accessAddr == serverAddr {
+			accessAddr = net.JoinHostPort("127.0.0.2", port)
+		}
 	}
 	return &http.Server{
 		Addr:     accessAddr,

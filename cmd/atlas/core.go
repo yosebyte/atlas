@@ -24,7 +24,7 @@ func coreDispatch(parsedURL *url.URL, stop chan os.Signal) {
 func runServer(parsedURL *url.URL, stop chan os.Signal) {
 	server := internal.NewServer(parsedURL, logger)
 	go func() {
-		logger.Info("Server started: %v", parsedURL.Host)
+		logger.Info("Server started: %v", parsedURL.String())
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 			logger.Error("Server error: %v", err)
 		}
@@ -40,7 +40,7 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 func runClient(parsedURL *url.URL, stop chan os.Signal) {
 	client := internal.NewClient(parsedURL, logger)
 	go func() {
-		logger.Info("Client started: %v", parsedURL.Host)
+		logger.Info("Client started: %v", parsedURL.String())
 		logger.Info("Access address: %v", client.Addr)
 		if err := client.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("Client error: %v", err)
