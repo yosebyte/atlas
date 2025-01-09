@@ -1,20 +1,16 @@
 package internal
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
-	"github.com/yosebyte/x/tls"
 )
 
-func NewServer(parsedURL *url.URL, logger *log.Logger) *http.Server {
-	tlsConfig, err := tls.NewTLSconfig(getagentID())
-	if err != nil {
-		logger.Error("Unable to generate TLS config: %v", err)
-	}
+func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *http.Server {
 	return &http.Server{
 		Addr:     parsedURL.Host,
 		ErrorLog: logger.StdLogger(),

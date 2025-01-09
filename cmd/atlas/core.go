@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/yosebyte/atlas/internal"
+	"github.com/yosebyte/x/tls"
 )
 
 func coreDispatch(parsedURL *url.URL, stop chan os.Signal) {
@@ -22,7 +23,11 @@ func coreDispatch(parsedURL *url.URL, stop chan os.Signal) {
 }
 
 func runServer(parsedURL *url.URL, stop chan os.Signal) {
-	server := internal.NewServer(parsedURL, logger)
+	tlsConfig, err := tls.NewTLSconfig("yosebyte/atlas:" + version)
+	if err != nil {
+		logger.Error("Unable to generate TLS config: %v", err)
+	}
+	server := internal.NewServer(parsedURL, tlsConfig, logger)
 	go func() {
 		logger.Info("Server started: %v", parsedURL.String())
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
