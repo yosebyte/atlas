@@ -16,7 +16,7 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 		port = "443"
 	}
 	return &http.Server{
-		Addr:     ":" + port,
+		Addr:     net.JoinHostPort("", port),
 		ErrorLog: logger.StdLogger(),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handleServerRequest(w, r, logger)
