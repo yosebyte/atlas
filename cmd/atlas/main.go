@@ -68,10 +68,10 @@ Usage:
 
 Examples:
     # Run as server
-    atlas server://10.1.0.1:10101?log=debug
+    atlas server://example.org:10101?log=debug
 
     # Run as client
-    atlas client://10.1.0.1:10101/127.0.0.1:8080
+    atlas client://example.org:10101/127.0.0.1:8080
 `, version, runtime.GOOS, runtime.GOARCH)
 	os.Exit(1)
 }
