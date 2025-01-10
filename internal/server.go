@@ -11,8 +11,12 @@ import (
 )
 
 func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *http.Server {
+	port := parsedURL.Port()
+	if port == "" {
+		port = "443"
+	}
 	return &http.Server{
-		Addr:     parsedURL.Host,
+		Addr:     ":" + port,
 		ErrorLog: logger.StdLogger(),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handleServerRequest(w, r, logger)
