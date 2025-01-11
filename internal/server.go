@@ -73,3 +73,4 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
+}
