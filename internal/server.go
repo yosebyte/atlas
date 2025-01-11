@@ -68,11 +68,11 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 }
 
 func updateServerHandler(handler http.Handler, parsedURL *url.URL, logger *log.Logger) http.Handler {
-	username := parsedURL.User.Username()
-	password, _ := parsedURL.User.Password()
-	if username!= "" && password!= "" {
+	password, set := parsedURL.User.Password()
+	if set {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if u, p, ok := r.BasicAuth(); !ok || u != username || p != password {
+			if _, p, ok := r.BasicAuth(); !ok || p != password {
+				logger.Debug("Password: %v/%v", p, ok)
 				w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				logger.Warn("Unauthorized access: %v", r.RemoteAddr)
