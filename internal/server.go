@@ -16,7 +16,7 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 		port = "443"
 	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleServerRequest(w, r, logger)
+		handleServerRequest(w, r, parsedURL, logger)
 	})
 	return &http.Server{
 		Addr:      net.JoinHostPort("", port),
@@ -26,9 +26,8 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
-	password, set := parsedURL.User.Password()
-	if set {
+func handleServerRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+	if password, ok := parsedURL.User.Password(); ok {
 		if _, p, ok := r.BasicAuth(); !ok || p != password {
 			logger.Debug("Password: %v/%v", p, ok)
 			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
