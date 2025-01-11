@@ -15,12 +15,13 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 	if port == "" {
 		port = "443"
 	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleServerRequest(w, r, logger)
+	})
 	return &http.Server{
 		Addr:     net.JoinHostPort("", port),
 		ErrorLog: logger.StdLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleServerRequest(w, r, logger)
-		}),
+		Handler: updateServerHandler(handler, parsedURL, logger),
 		TLSConfig: tlsConfig,
 	}
 }
@@ -64,4 +65,21 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
+}
+
+func updateServerHandler(handler http.Handler, parsedURL *url.URL, logger *log.Logger) http.Handler {
+	username := parsedURL.User.Username()
+	password, _ := parsedURL.User.Password()
+	if username!= "" && password!= "" {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if u, p, ok := r.BasicAuth(); !ok || u != username || p != password {
+				w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				logger.Warn("Unauthorized access: %v", r.RemoteAddr)
+				return
+			}
+			handler.ServeHTTP(w, r)
+		})
+	}
+	return handler
 }
