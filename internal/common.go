@@ -17,5 +17,5 @@ func hijackConnection(w http.ResponseWriter) (net.Conn, error) {
 }
 
 func getagentID() string {
-	return "ATLAS/" + strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
+	return "atlas/" + strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
 }
