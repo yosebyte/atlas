@@ -20,12 +20,13 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 		port := rand.Intn(7169) + 1024
 		accessAddr = fmt.Sprintf("%s:%d", ip, port)
 	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleClientRequest(w, r, serverAddr, logger)
+	})
 	return &http.Server{
 		Addr:     accessAddr,
 		ErrorLog: logger.StdLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleClientRequest(w, r, serverAddr, logger)
-		}),
+		Handler: updateClientHandler(handler, parsedURL, logger),
 	}
 }
 
@@ -72,4 +73,17 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
 		return
 	}
+}
+
+func updateClientHandler(handler http.Handler, parsedURL *url.URL, logger *log.Logger) http.Handler {
+	username := parsedURL.User.Username()
+	password, _ := parsedURL.User.Password()
+	if username != "" && password!= "" {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.SetBasicAuth(username, password)
+			logger.Debug("Basic authentication enabled")
+			handler.ServeHTTP(w, r)
+		})
+	}
+	return handler
 }
