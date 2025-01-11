@@ -28,12 +28,14 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 
 func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 	password, set := parsedURL.User.Password()
-	if _, p, ok := r.BasicAuth(); !ok || p != password {
-		logger.Debug("Password: %v/%v", p, ok)
-		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		logger.Warn("Unauthorized access: %v", r.RemoteAddr)
-		return
+	if set {
+		if _, p, ok := r.BasicAuth(); !ok || p != password {
+			logger.Debug("Password: %v/%v", p, ok)
+			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			logger.Warn("Unauthorized access: %v", r.RemoteAddr)
+			return
+		}
 	}
 	if r.Method == http.MethodConnect {
 		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
