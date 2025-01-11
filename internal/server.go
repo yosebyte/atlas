@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/yosebyte/x/io"
 	"github.com/yosebyte/x/log"
@@ -16,7 +17,7 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 		port = "443"
 	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleServerRequest(w, r, parsedURL, logger)
+		handleServerRequest(w, r, logger)
 	})
 	return &http.Server{
 		Addr:      net.JoinHostPort("", port),
@@ -26,19 +27,14 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
-	if password, ok := parsedURL.User.Password(); ok {
-		if _, p, ok := r.BasicAuth(); !ok || p != password {
-			logger.Debug("Password: %v/%v", p, ok)
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			logger.Warn("Unauthorized access: %v", r.RemoteAddr)
+func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
+	if r.Method == http.MethodConnect {
+		userAgent := r.Header.Get("User-Agent")
+		logger.Debug("User-Agent: %v", userAgent)
+		if !strings.HasPrefix(userAgent, "curl/") {
 			return
 		}
-	}
-	if r.Method == http.MethodConnect {
-		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
-		if r.Header.Get("User-Agent") != getagentID() {
+		if userAgent != getagentID() {
 			http.Error(w, "Connection Established", http.StatusOK)
 		}
 		clientConn, err := hijackConnection(w)
