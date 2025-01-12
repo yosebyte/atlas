@@ -37,7 +37,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 			logger.Debug("Pending connection: %v", r.RemoteAddr)
 		}
 		if !strings.HasPrefix(userAgent, agentPrefix) {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Error(w, "403 Forbidden", http.StatusForbidden)
 			logger.Warn("403: %v %v", r.RemoteAddr, userAgent)
 			return
 		}
@@ -70,7 +70,7 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, pageNotFound, http.StatusNotFound)
+		http.Error(w, "404 Not Found", http.StatusNotFound)
 		logger.Warn("404: %v %v", r.RemoteAddr, r.Method)
 		return
 	}
