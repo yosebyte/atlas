@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var agentPrefix = "nghttp2/"
+var agentPrefix = "curl/"
 
 func hijackConnection(w http.ResponseWriter) (net.Conn, error) {
 	hijacker, ok := w.(http.Hijacker)
