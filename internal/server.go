@@ -16,11 +16,12 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 	if port == "" {
 		port = "443"
 	}
+	serverAddr := net.JoinHostPort("", port)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleServerRequest(w, r, logger)
 	})
 	return &http.Server{
-		Addr:      net.JoinHostPort("", port),
+		Addr:      serverAddr,
 		ErrorLog:  logger.StdLogger(),
 		Handler:   handler,
 		TLSConfig: tlsConfig,
@@ -31,11 +32,14 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 	if r.Method == http.MethodConnect {
 		userAgent := r.Header.Get("User-Agent")
 		logger.Debug("User-Agent: %v", userAgent)
-		if !strings.HasPrefix(userAgent, "curl/") {
-			return
-		}
 		if userAgent != getagentID() {
-			http.Error(w, "Connection Established", http.StatusOK)
+			http.Error(w, "Pending connection", http.StatusOK)
+			logger.Debug("Pending connection: %v", r.RemoteAddr)
+		}
+		if !strings.HasPrefix(userAgent, agentPrefix) {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			logger.Warn("403: %v %v", r.RemoteAddr, userAgent)
+			return
 		}
 		clientConn, err := hijackConnection(w)
 		if err != nil {
@@ -66,8 +70,8 @@ func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Log
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
+		http.Error(w, pageNotFound, http.StatusNotFound)
+		logger.Warn("404: %v %v", r.RemoteAddr, r.Method)
 		return
 	}
 }
