@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +14,11 @@ import (
 )
 
 func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
-	serverAddr := parsedURL.Host
+	port := parsedURL.Port()
+	if port == "" {
+		port = "443"
+	}
+	serverAddr := net.JoinHostPort(parsedURL.Hostname(), port)
 	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
 	if accessAddr == "" {
 		ip := fmt.Sprintf("127.0.0.%d", rand.Intn(255))
@@ -32,7 +37,8 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 
 func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
-		http.Error(w, "Connection Established", http.StatusOK)
+		http.Error(w, "Pending connection", http.StatusOK)
+		logger.Debug("Pending connection: %v", r.RemoteAddr)
 		r.Header.Set("User-Agent", getagentID())
 		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)
@@ -69,8 +75,8 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		logger.Debug("Method not allowed: %v/%v", r.RemoteAddr, r.Method)
+		http.Error(w, pageNotFound, http.StatusNotFound)
+		logger.Warn("404: %v %v", r.RemoteAddr, r.Method)
 		return
 	}
 }
