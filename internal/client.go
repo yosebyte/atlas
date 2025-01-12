@@ -75,7 +75,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, pageNotFound, http.StatusNotFound)
+		http.Error(w, "404 Not Found", http.StatusNotFound)
 		logger.Warn("404: %v %v", r.RemoteAddr, r.Method)
 		return
 	}
