@@ -53,7 +53,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 				clientConn.Close()
 			}
 		}()
-		serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{InsecureSkipVerify: true})
+		serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to dial server: %v", err)
