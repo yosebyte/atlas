@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -75,8 +76,13 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr stri
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, "404 Not Found", http.StatusNotFound)
-		logger.Warn("404: %v %v", r.RemoteAddr, r.Method)
-		return
+		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+			Path:   r.URL.Path,
+		})
+		proxy.ErrorLog = logger.StdLogger()
+		logger.Debug("HTTP request: %v %v", r.Method, r.URL)
+		proxy.ServeHTTP(w, r)
 	}
 }
