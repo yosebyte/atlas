@@ -12,12 +12,15 @@ import (
 )
 
 func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *http.Server {
+	if parsedURL.Fragment != "" {
+		userAgentName = parsedURL.Fragment
+	}
 	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
 	if accessAddr == "" {
 		accessAddr = getAccessAddr()
 	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleServerRequest(w, r, parsedURL, logger)
+		handleServerRequest(w, r, logger)
 	})
 	return &http.Server{
 		Addr:      accessAddr,
@@ -27,18 +30,13 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 	}
 }
 
-func handleServerRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+func handleServerRequest(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
 		userAgent := r.Header.Get("User-Agent")
 		logger.Debug("User-Agent: %v", userAgent)
-		if userAgent != getUserAgent(parsedURL.Fragment) {
+		if userAgent != getUserAgent() {
 			http.Error(w, "Pending connection", http.StatusOK)
 			logger.Debug("Pending connection: %v", r.RemoteAddr)
-		}
-		if !strings.HasPrefix(userAgent, parsedURL.Fragment+"/") {
-			http.Error(w, "403 Forbidden", http.StatusForbidden)
-			logger.Warn("403 Forbidden: %v %v", r.RemoteAddr, userAgent)
-			return
 		}
 		clientConn, err := hijackConnection(w)
 		if err != nil {

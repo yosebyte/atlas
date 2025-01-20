@@ -13,6 +13,9 @@ import (
 )
 
 func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
+	if parsedURL.Fragment != "" {
+		userAgentName = parsedURL.Fragment
+	}
 	port := parsedURL.Port()
 	if port == "" {
 		port = "443"
@@ -36,7 +39,7 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.
 	if r.Method == http.MethodConnect {
 		http.Error(w, "Pending connection", http.StatusOK)
 		logger.Debug("Pending connection: %v", r.RemoteAddr)
-		r.Header.Set("User-Agent", getUserAgent(parsedURL.Fragment))
+		r.Header.Set("User-Agent", getUserAgent())
 		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)
 		if err != nil {
