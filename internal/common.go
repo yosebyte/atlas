@@ -8,14 +8,22 @@ import (
 	"time"
 )
 
-var userAgentName = "curl"
-
-func getUserAgent() string {
+func getUserAgent(userAgentName string) string {
+	if userAgentName == "" {
+		userAgentName = "curl"
+	}
 	userAgentID := strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
 	return userAgentName + "/" + userAgentID
 }
 
-func getAccessAddr() string {
+func getAccessAddr(accessAddr string) string {
+	if accessAddr == "" {
+		return generateAccessAddr()
+	}
+	return accessAddr
+}
+
+func generateAccessAddr() string {
 	port := rand.Intn(7169) + 1024
 	return "127.0.0.1:" + strconv.Itoa(port)
 }

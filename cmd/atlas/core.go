@@ -25,7 +25,7 @@ func coreDispatch(parsedURL *url.URL, stop chan os.Signal) {
 }
 
 func runServer(parsedURL *url.URL, stop chan os.Signal) {
-	var server *http.Server
+	server := &http.Server{}
 	if parsedURL.Hostname() != "" && net.ParseIP(parsedURL.Hostname()) == nil {
 		manager := &autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
@@ -34,7 +34,7 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 		}
 		tlsConfig := manager.TLSConfig()
 		server = internal.NewServer(parsedURL, tlsConfig, logger)
-		logger.Debug("Using autocert for %v", parsedURL.Hostname())
+		logger.Debug("Managing autocert for: %v", parsedURL.Hostname())
 	} else {
 		tlsConfig, err := tls.NewTLSconfig("yosebyte/atlas:" + version)
 		if err != nil {
@@ -42,7 +42,7 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 			getExitInfo()
 		}
 		server = internal.NewServer(parsedURL, tlsConfig, logger)
-		logger.Debug("Using self-signed certificate")
+		logger.Debug("Generating self-signed certificate")
 	}
 	go func() {
 		logger.Info("Server started: %v", parsedURL.String())

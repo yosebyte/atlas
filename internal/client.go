@@ -13,33 +13,18 @@ import (
 )
 
 func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
-	if parsedURL.Fragment != "" {
-		userAgentName = parsedURL.Fragment
-	}
-	port := parsedURL.Port()
-	if port == "" {
-		port = "443"
-	}
-	parsedURL.Host = net.JoinHostPort(parsedURL.Hostname(), port)
-	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
-	if accessAddr == "" {
-		accessAddr = getAccessAddr()
-	}
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleClientRequest(w, r, parsedURL, logger)
-	})
 	return &http.Server{
-		Addr:     accessAddr,
+		Addr:     getAccessAddr(strings.TrimPrefix(parsedURL.Path, "/")),
 		ErrorLog: logger.StdLogger(),
-		Handler:  handler,
+		Handler:  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { clientConnect(w, r, parsedURL, logger) }),
 	}
 }
 
-func handleClientRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
 		http.Error(w, "Pending connection", http.StatusOK)
 		logger.Debug("Pending connection: %v", r.RemoteAddr)
-		r.Header.Set("User-Agent", getUserAgent())
+		r.Header.Set("User-Agent", getUserAgent(parsedURL.Fragment))
 		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)
 		if err != nil {
@@ -80,13 +65,13 @@ func handleClientRequest(w http.ResponseWriter, r *http.Request, parsedURL *url.
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+		p := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   r.Host,
 			Path:   r.URL.Path,
 		})
-		proxy.ErrorLog = logger.StdLogger()
-		logger.Debug("Handling HTTP request: %v %v", r.Method, r.URL)
-		proxy.ServeHTTP(w, r)
+		p.ErrorLog = logger.StdLogger()
+		logger.Debug("HTTP request: %v %v", r.Method, r.URL)
+		p.ServeHTTP(w, r)
 	}
 }
