@@ -2,7 +2,6 @@ package internal
 
 import (
 	"crypto/tls"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -38,12 +37,7 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 				clientConn.Close()
 			}
 		}()
-		tlsConfig := &tls.Config{}
-		if net.ParseIP(parsedURL.Hostname()) != nil {
-			tlsConfig.InsecureSkipVerify = true
-			logger.Debug("Skipping cert verification: %v", parsedURL.Hostname())
-		}
-		serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
+		serverConn, err := tls.Dial("tcp", parsedURL.Host, &tls.Config{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to dial server: %v", err)
