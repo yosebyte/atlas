@@ -9,9 +9,6 @@ import (
 )
 
 func getUserAgent(userAgentName string) string {
-	if userAgentName == "" {
-		userAgentName = "curl"
-	}
 	userAgentID := strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
 	return userAgentName + "/" + userAgentID
 }

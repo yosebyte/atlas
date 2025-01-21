@@ -13,25 +13,27 @@ import (
 
 func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *http.Server {
 	return &http.Server{
-		Addr:      getAccessAddr(strings.TrimPrefix(parsedURL.Path, "/")),
-		ErrorLog:  logger.StdLogger(),
-		Handler:   http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { serverConnect(w, r, parsedURL, logger) }),
+		Addr:     getAccessAddr(strings.TrimPrefix(parsedURL.Path, "/")),
+		ErrorLog: logger.StdLogger(),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			serverConnect(w, r, parsedURL.Fragment, logger)
+		}),
 		TLSConfig: tlsConfig,
 	}
 }
 
-func serverConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+func serverConnect(w http.ResponseWriter, r *http.Request, userAgentName string, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
 		userAgent := r.Header.Get("User-Agent")
 		logger.Debug("User-Agent: %v", userAgent)
-		if !strings.HasPrefix(userAgent, parsedURL.Fragment) {
-			http.Error(w, "403 Forbidden", http.StatusForbidden)
-			logger.Warn("403 Forbidden: %v", r.RemoteAddr)
-			return
-		}
-		if userAgent != getUserAgent(parsedURL.Fragment) {
+		if userAgent != getUserAgent(userAgentName) {
 			http.Error(w, "Pending connection", http.StatusOK)
 			logger.Debug("Pending connection: %v", r.RemoteAddr)
+		}
+		if !strings.HasPrefix(userAgent, userAgentName) {
+			http.Error(w, "403 Forbidden", http.StatusForbidden)
+			logger.Warn("403 Forbidden: %v %v", r.RemoteAddr, userAgent)
+			return
 		}
 		clientConn, err := hijackConnection(w)
 		if err != nil {
@@ -63,7 +65,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 		}
 	} else {
 		http.Error(w, "404 Not Found", http.StatusNotFound)
-		logger.Warn("404 Not Found: %v", r.RemoteAddr)
+		logger.Warn("404 Not Found: %v %v", r.RemoteAddr, r.Method)
 		return
 	}
 }

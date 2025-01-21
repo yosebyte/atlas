@@ -2,6 +2,7 @@ package internal
 
 import (
 	"crypto/tls"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -15,7 +16,9 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 	return &http.Server{
 		Addr:     getAccessAddr(strings.TrimPrefix(parsedURL.Path, "/")),
 		ErrorLog: logger.StdLogger(),
-		Handler:  http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { clientConnect(w, r, parsedURL, logger) }),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			clientConnect(w, r, parsedURL, logger)
+		}),
 	}
 }
 
@@ -37,7 +40,11 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 				clientConn.Close()
 			}
 		}()
-		serverConn, err := tls.Dial("tcp", parsedURL.Host, &tls.Config{})
+		tlsConfig := &tls.Config{}
+		if net.ParseIP(parsedURL.Hostname()) != nil {
+			tlsConfig.InsecureSkipVerify = true
+		}
+		serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to dial server: %v", err)
@@ -59,13 +66,13 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		p := httputil.NewSingleHostReverseProxy(&url.URL{
+		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   r.Host,
 			Path:   r.URL.Path,
 		})
-		p.ErrorLog = logger.StdLogger()
+		proxy.ErrorLog = logger.StdLogger()
 		logger.Debug("HTTP request: %v %v", r.Method, r.URL)
-		p.ServeHTTP(w, r)
+		proxy.ServeHTTP(w, r)
 	}
 }
