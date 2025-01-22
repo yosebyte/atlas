@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/yosebyte/atlas/internal"
-	"github.com/yosebyte/x/tls"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -25,22 +23,12 @@ func coreDispatch(parsedURL *url.URL, stop chan os.Signal) {
 }
 
 func runServer(parsedURL *url.URL, stop chan os.Signal) {
-	server := &http.Server{}
-	if parsedURL.Hostname() != "" && net.ParseIP(parsedURL.Hostname()) == nil {
-		manager := &autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			Cache:      autocert.DirCache("autocert"),
-			HostPolicy: autocert.HostWhitelist(parsedURL.Hostname()),
-		}
-		tlsConfig := manager.TLSConfig()
-		server = internal.NewServer(parsedURL, tlsConfig, logger)
-	} else {
-		tlsConfig, err := tls.NewTLSconfig("yosebyte/atlas:" + version)
-		if err != nil {
-			logger.Error("Unable to generate TLS config: %v", err)
-		}
-		server = internal.NewServer(parsedURL, tlsConfig, logger)
+	manager := &autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		Cache:      autocert.DirCache("autocert"),
+		HostPolicy: autocert.HostWhitelist(parsedURL.Hostname()),
 	}
+	server := internal.NewServer(parsedURL, manager.TLSConfig(), logger)
 	go func() {
 		logger.Info("Server started: %v", parsedURL.String())
 		if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
