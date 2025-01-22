@@ -1,6 +1,6 @@
 module github.com/yosebyte/atlas
 
-go 1.23.4
+go 1.23.5
 
 require (
 	github.com/yosebyte/x v1.0.6
@@ -8,6 +8,6 @@ require (
 )
 
 require (
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )
