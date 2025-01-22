@@ -2,6 +2,8 @@ package internal
 
 import (
 	"crypto/tls"
+	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -13,20 +15,32 @@ import (
 )
 
 func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
+	port := parsedURL.Port()
+	if port == "" {
+		port = "443"
+	}
+	serverAddr := net.JoinHostPort(parsedURL.Hostname(), port)
+	accessAddr := strings.TrimPrefix(parsedURL.Path, "/")
+	if accessAddr == "" {
+		ip := fmt.Sprintf("127.0.0.%d", rand.Intn(255))
+		port := rand.Intn(7169) + 1024
+		accessAddr = fmt.Sprintf("%s:%d", ip, port)
+	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handleClientRequest(w, r, serverAddr, logger)
+	})
 	return &http.Server{
-		Addr:     getAccessAddr(strings.TrimPrefix(parsedURL.Path, "/")),
+		Addr:     accessAddr,
 		ErrorLog: logger.StdLogger(),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			clientConnect(w, r, parsedURL, logger)
-		}),
+		Handler:  handler,
 	}
 }
 
-func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+func handleClientRequest(w http.ResponseWriter, r *http.Request, serverAddr string, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
 		http.Error(w, "Pending connection", http.StatusOK)
 		logger.Debug("Pending connection: %v", r.RemoteAddr)
-		r.Header.Set("User-Agent", getUserAgent(parsedURL.Fragment))
+		r.Header.Set("User-Agent", getagentID())
 		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)
 		if err != nil {
@@ -40,11 +54,7 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 				clientConn.Close()
 			}
 		}()
-		tlsConfig := &tls.Config{}
-		if net.ParseIP(parsedURL.Hostname()) != nil {
-			tlsConfig.InsecureSkipVerify = true
-		}
-		serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
+		serverConn, err := tls.Dial("tcp", serverAddr, &tls.Config{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to dial server: %v", err)

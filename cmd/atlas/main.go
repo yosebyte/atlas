@@ -64,14 +64,14 @@ func getExitInfo() {
 	logger.Info(`Version: %v %v/%v
 
 Usage: 
-    atlas <core_mode>://<server_addr>/<access_addr>?<log=level>#<user_agent>
+    atlas <core_mode>://<server_addr>/<access_addr>?<log=level>
 
 Examples:
     # Run as server
-    atlas server://example.org/127.0.0.1:128?log=debug#atlas
+    atlas server://example.org:10101?log=debug
 
     # Run as client
-    atlas client://example.org/127.0.0.1:8080?log=warn#atlas
+    atlas client://example.org:10101/127.0.0.1:8080
 `, version, runtime.GOOS, runtime.GOARCH)
 	os.Exit(1)
 }

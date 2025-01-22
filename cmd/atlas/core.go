@@ -32,7 +32,8 @@ func runServer(parsedURL *url.URL, stop chan os.Signal) {
 			Cache:      autocert.DirCache("autocert"),
 			HostPolicy: autocert.HostWhitelist(parsedURL.Hostname()),
 		}
-		server = internal.NewServer(parsedURL, manager.TLSConfig(), logger)
+		tlsConfig := manager.TLSConfig()
+		server = internal.NewServer(parsedURL, tlsConfig, logger)
 	} else {
 		tlsConfig, err := tls.NewTLSconfig("yosebyte/atlas:" + version)
 		if err != nil {
