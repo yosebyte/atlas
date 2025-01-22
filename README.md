@@ -12,8 +12,8 @@ Another Transport Layer Access Service from the Yosebyte Collections.
 atlas <core_mode>://<server_addr>/<access_addr>?<log=level>
 
 # Run as server
-atlas server://example.org/127.0.0.1:128?log=debug
+atlas server://example.org/127.0.0.1:1?log=debug
 
 # Run as client
-atlas client://example.org/127.0.0.1:8080?log=warn
+atlas client://example.org:10101/127.0.0.1:10101
 ```
