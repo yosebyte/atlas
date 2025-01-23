@@ -22,13 +22,8 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 
 func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
-		http.Error(w, "Pending connection", http.StatusOK)
-		logger.Debug("Pending connection: %v", r.RemoteAddr)
-		r.Header.Set("User-Agent", getUserAgent())
-		logger.Debug("User-Agent: %v", r.Header.Get("User-Agent"))
 		clientConn, err := hijackConnection(w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			logger.Error("Unable to hijack connection: %v", err)
 			return
 		}
@@ -45,7 +40,6 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 		}
 		serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to dial server: %v", err)
 			return
 		}
@@ -56,7 +50,6 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 			}
 		}()
 		if err := r.Write(serverConn); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			logger.Error("Unable to write request to server: %v", err)
 			return
 		}

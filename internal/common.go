@@ -5,12 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 )
-
-func getUserAgent() string {
-	return "atlas/" + strconv.FormatInt(time.Now().Truncate(time.Minute).Unix(), 16)
-}
 
 func getAccessAddr(accessAddr string) string {
 	if accessAddr != "" {
