@@ -18,13 +18,13 @@ var (
 func main() {
 	parsedURL := getParsedURL(os.Args)
 	initLogLevel(parsedURL.Query().Get("log"))
-	coreDispatch(parsedURL, getStopSignal())
+	coreDispatch(parsedURL, getSignalChan())
 }
 
-func getStopSignal() chan os.Signal {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	return stop
+func getSignalChan() chan os.Signal {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	return signalChan
 }
 
 func getParsedURL(args []string) *url.URL {
