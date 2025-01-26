@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -55,8 +56,13 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		http.Error(w, "404 Not Found", http.StatusNotFound)
-		logger.Warn("404 Not Found: %v", r.RemoteAddr)
-		return
+		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+			Path:   r.URL.Path,
+		})
+		reverseProxy.ErrorLog = logger.StdLogger()
+		logger.Debug("HTTP request: %v %v", r.Method, r.URL)
+		reverseProxy.ServeHTTP(w, r)
 	}
 }

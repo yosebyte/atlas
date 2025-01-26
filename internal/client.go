@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -21,50 +20,39 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 }
 
 func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
-	if r.Method == http.MethodConnect {
-		clientConn, err := hijackConnection(w)
-		if err != nil {
-			logger.Error("Unable to hijack connection: %v", err)
-			return
+	clientConn, err := hijackConnection(w)
+	if err != nil {
+		logger.Error("Unable to hijack connection: %v", err)
+		return
+	}
+	logger.Debug("Client connected: %v", clientConn.RemoteAddr())
+	defer func() {
+		if clientConn != nil {
+			clientConn.Close()
 		}
-		logger.Debug("Client connected: %v", clientConn.RemoteAddr())
-		defer func() {
-			if clientConn != nil {
-				clientConn.Close()
-			}
-		}()
-		tlsConfig := &tls.Config{}
-		if net.ParseIP(parsedURL.Hostname()) != nil {
-			tlsConfig.InsecureSkipVerify = true
-			logger.Debug("Skipping cert verification: %v", parsedURL.Hostname())
+	}()
+	tlsConfig := &tls.Config{}
+	if net.ParseIP(parsedURL.Hostname()) != nil {
+		tlsConfig.InsecureSkipVerify = true
+		logger.Debug("Skipping cert verification: %v", parsedURL.Hostname())
+	}
+	serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
+	if err != nil {
+		logger.Error("Unable to dial server: %v", err)
+		return
+	}
+	logger.Debug("Server connected: %v", serverConn.RemoteAddr())
+	defer func() {
+		if serverConn != nil {
+			serverConn.Close()
 		}
-		serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
-		if err != nil {
-			logger.Error("Unable to dial server: %v", err)
-			return
-		}
-		logger.Debug("Server connected: %v", serverConn.RemoteAddr())
-		defer func() {
-			if serverConn != nil {
-				serverConn.Close()
-			}
-		}()
-		if err := r.Write(serverConn); err != nil {
-			logger.Error("Unable to write request to server: %v", err)
-			return
-		}
-		logger.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
-		if err := io.DataExchange(clientConn, serverConn); err != nil {
-			logger.Debug("Connection closed: %v", err)
-		}
-	} else {
-		reverseProxy := httputil.NewSingleHostReverseProxy(&url.URL{
-			Scheme: "http",
-			Host:   r.Host,
-			Path:   r.URL.Path,
-		})
-		reverseProxy.ErrorLog = logger.StdLogger()
-		logger.Debug("HTTP request: %v %v", r.Method, r.URL)
-		reverseProxy.ServeHTTP(w, r)
+	}()
+	if err := r.Write(serverConn); err != nil {
+		logger.Error("Unable to write request to server: %v", err)
+		return
+	}
+	logger.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
+	if err := io.DataExchange(clientConn, serverConn); err != nil {
+		logger.Debug("Connection closed: %v", err)
 	}
 }
