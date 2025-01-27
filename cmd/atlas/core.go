@@ -27,7 +27,7 @@ func coreDispatch(parsedURL *url.URL, signalChan chan os.Signal) {
 
 func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 	if parsedURL.Hostname() != "" && net.ParseIP(parsedURL.Hostname()) == nil {
-		logger.Info("Managing autocert for: %v", parsedURL.Hostname())
+		logger.Info("Apply autocert: %v", parsedURL.Hostname())
 		manager := &autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
 			Cache:      autocert.DirCache("autocert"),
@@ -39,9 +39,9 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 		}
 		internalSvr := internal.NewServer(parsedURL, manager.TLSConfig(), logger)
 		go func() {
-			logger.Info("Autocert server started: %v", autocertSvr.Addr)
+			logger.Debug("Autocert started: %v", autocertSvr.Addr)
 			if err := autocertSvr.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				logger.Error("Autocert server error: %v", err)
+				logger.Error("Autocert error: %v", err)
 			}
 		}()
 		go func() {
@@ -55,11 +55,11 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		go func() {
-			logger.Info("Autocert server shutting down")
+			logger.Debug("Autocert shutting down")
 			if err := autocertSvr.Shutdown(ctx); err != nil {
-				logger.Error("Autocert server shutdown error: %v", err)
+				logger.Error("Autocert shutdown error: %v", err)
 			}
-			logger.Info("Autocert server shutdown complete")
+			logger.Debug("Autocert shutdown complete")
 		}()
 		go func() {
 			logger.Info("Server shutting down")
@@ -69,11 +69,11 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 			logger.Info("Server shutdown complete")
 		}()
 	} else {
-		logger.Info("Generating self-signed cert")
+		logger.Info("Apply self-signed cert")
 		tlsConfig, err := tls.GenerateTLSConfig("yosebyte/atlas:" + version)
 		if err != nil {
 			logger.Fatal("Unable to generate TLS config: %v", err)
-			getExitInfo()
+			return
 		}
 		server := internal.NewServer(parsedURL, tlsConfig, logger)
 		go func() {
