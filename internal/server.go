@@ -32,7 +32,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			clientConn.Close()
 		}
 	}()
-	targetConn, err := net.Dial("tcp", r.Host)
+	targetConn, err := net.Dial("tcp", r.URL.Host)
 	if err != nil {
 		logger.Error("Unable to dial target: %v", err)
 		return
