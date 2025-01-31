@@ -61,15 +61,16 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Debug("Connection closed: %v", err)
 		}
 	} else {
-		proxy := httputil.NewSingleHostReverseProxy(&url.URL{
-			Scheme: "http",
-			Host:   r.Host,
-		})
-		r.URL.Scheme = "http"
-		r.URL.Host = r.Host
-		r.RequestURI = ""
-		r.Header.Del("Proxy-Connection")
-		logger.Debug("Proxying HTTP: %v %v", r.Method, r.URL)
+		proxy := &httputil.ReverseProxy{
+			Director: func(req *http.Request) {
+				req.URL.Scheme = "http"
+				req.URL.Host = r.Host
+				req.RequestURI = ""
+				req.Header.Del("Proxy-Connection")
+			},
+			ErrorLog: logger.StdLogger(),
+		}
+		logger.Debug("Handling HTTP request: %v %v", r.Method, r.URL)
 		proxy.ServeHTTP(w, r)
 	}
 }
