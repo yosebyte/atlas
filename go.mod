@@ -3,7 +3,7 @@ module github.com/yosebyte/atlas
 go 1.23.5
 
 require (
-	github.com/yosebyte/x v1.0.8
+	github.com/yosebyte/x v1.0.9
 	golang.org/x/crypto v0.32.0
 )
 

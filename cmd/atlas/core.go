@@ -34,7 +34,7 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 			HostPolicy: autocert.HostWhitelist(parsedURL.Hostname()),
 		}
 		autocertSvr := &http.Server{
-			Addr:    ":http",
+			Addr:    ":80",
 			Handler: manager.HTTPHandler(nil),
 		}
 		internalSvr := internal.NewServer(parsedURL, manager.TLSConfig(), logger)

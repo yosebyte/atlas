@@ -20,12 +20,13 @@ func NewClient(parsedURL *url.URL, logger *log.Logger) *http.Server {
 }
 
 func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, logger *log.Logger) {
+	logger.Debug("Client connected: %v", r.RemoteAddr)
 	clientConn, err := hijackConnection(w)
 	if err != nil {
 		logger.Error("Unable to hijack connection: %v", err)
 		return
 	}
-	logger.Debug("Client connected: %v", clientConn.RemoteAddr())
+	logger.Debug("Client hijacked: %v", clientConn.RemoteAddr())
 	defer func() {
 		if clientConn != nil {
 			clientConn.Close()
