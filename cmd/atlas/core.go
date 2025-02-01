@@ -45,7 +45,7 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 			}
 		}()
 		go func() {
-			logger.Info("Server started: %v", parsedURL.String())
+			logger.Info("Server started: %v", parsedURL)
 			logger.Info("Access address: %v", internalSvr.Addr)
 			if err := internalSvr.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 				logger.Error("Server error: %v", err)
@@ -69,7 +69,7 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 			logger.Info("Server shutdown complete")
 		}()
 	} else {
-		logger.Info("Apply self-signed cert")
+		logger.Info("Apply RAM cert")
 		tlsConfig, err := tls.GenerateTLSConfig("yosebyte/atlas:" + version)
 		if err != nil {
 			logger.Fatal("Unable to generate TLS config: %v", err)
@@ -77,7 +77,7 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 		}
 		server := internal.NewServer(parsedURL, tlsConfig, logger)
 		go func() {
-			logger.Info("Server started: %v", parsedURL.String())
+			logger.Info("Server started: %v", parsedURL)
 			logger.Info("Access address: %v", server.Addr)
 			if err := server.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
 				logger.Error("Server error: %v", err)
@@ -97,7 +97,7 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 func runClient(parsedURL *url.URL, signalChan chan os.Signal) {
 	client := internal.NewClient(parsedURL, logger)
 	go func() {
-		logger.Info("Client started: %v", parsedURL.String())
+		logger.Info("Client started: %v", parsedURL)
 		logger.Info("Access address: %v", client.Addr)
 		if err := client.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("Client error: %v", err)
