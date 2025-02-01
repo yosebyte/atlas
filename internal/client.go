@@ -52,7 +52,7 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 		logger.Error("Unable to write request to server: %v", err)
 		return
 	}
-	logger.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
+	logger.Debug("Exchanging data: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
 	if err := io.DataExchange(clientConn, serverConn); err != nil {
 		logger.Debug("Connection closed: %v", err)
 	}
