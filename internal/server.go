@@ -35,10 +35,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 				clientConn.Close()
 			}
 		}()
-		if !strings.Contains(r.URL.Host, ":") {
-			r.URL.Host += ":443"
-		}
-		logger.Debug("Connecting to target: %v", r.URL.Host)
+		logger.Debug("Connecting target: %v", r.URL)
 		targetConn, err := net.Dial("tcp", r.URL.Host)
 		if err != nil {
 			clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
@@ -56,7 +53,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Error("Unable to write response to client: %v", err)
 			return
 		}
-		logger.Debug("Connection established: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
+		logger.Debug("Exchanging data: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
 		if err := io.DataExchange(clientConn, targetConn); err != nil {
 			logger.Debug("Connection closed: %v", err)
 		}
