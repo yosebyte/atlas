@@ -23,23 +23,21 @@ func NewServer(parsedURL *url.URL, tlsConfig *tls.Config, logger *log.Logger) *h
 
 func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 	if r.Method == http.MethodConnect {
-		logger.Debug("Client connected: %v", r.RemoteAddr)
 		clientConn, err := hijackConnection(w)
 		if err != nil {
-			logger.Error("Unable to hijack connection: %v", err)
+			logger.Error("Hijack failed: %v", err)
 			return
 		}
-		logger.Debug("Client hijacked: %v", clientConn.RemoteAddr())
+		logger.Debug("Client connected: %v", clientConn.RemoteAddr())
 		defer func() {
 			if clientConn != nil {
 				clientConn.Close()
 			}
 		}()
-		logger.Debug("Connecting target: %v", r.URL)
+		logger.Debug("Targeting server: %v", r.URL)
 		targetConn, err := net.Dial("tcp", r.URL.Host)
 		if err != nil {
-			clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
-			logger.Error("Unable to dial target: %v", err)
+			logger.Error("Dial failed: %v", err)
 			return
 		}
 		logger.Debug("Target connected: %v", targetConn.RemoteAddr())
@@ -48,14 +46,13 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 				targetConn.Close()
 			}
 		}()
-		_, err = clientConn.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
-		if err != nil {
-			logger.Error("Unable to write response to client: %v", err)
+		if _, err := clientConn.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n")); err != nil {
+			logger.Error("Write failed: %v", err)
 			return
 		}
-		logger.Debug("Exchanging data: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
+		logger.Debug("Starting exchange: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
 		if err := io.DataExchange(clientConn, targetConn); err != nil {
-			logger.Debug("Connection closed: %v", err)
+			logger.Debug("Exchange complete: %v", err)
 		}
 	} else {
 		proxy := &httputil.ReverseProxy{
