@@ -67,7 +67,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			},
 			ErrorLog: logger.StdLogger(),
 		}
-		logger.Debug("Handling HTTP request: %v %v", r.Method, r.URL)
+		logger.Debug("Handling HTTP: %v %v", r.Method, r.URL)
 		proxy.ServeHTTP(w, r)
 	}
 }
