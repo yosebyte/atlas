@@ -69,10 +69,10 @@ func runServer(parsedURL *url.URL, signalChan chan os.Signal) {
 			logger.Info("Server shutdown complete")
 		}()
 	} else {
-		logger.Info("Apply RAM cert")
+		logger.Info("Apply RAM cert: %v", version)
 		tlsConfig, err := tls.GenerateTLSConfig("yosebyte/atlas:" + version)
 		if err != nil {
-			logger.Fatal("Unable to generate TLS config: %v", err)
+			logger.Fatal("Generate failed: %v", err)
 			return
 		}
 		server := internal.NewServer(parsedURL, tlsConfig, logger)
