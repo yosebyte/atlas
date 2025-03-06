@@ -34,7 +34,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 				clientConn.Close()
 			}
 		}()
-		logger.Debug("Targeting server: %v", r.URL)
+		logger.Debug("Targeting server: %v", r.URL.Host)
 		targetConn, err := net.Dial("tcp", r.URL.Host)
 		if err != nil {
 			logger.Error("Dial failed: %v", err)

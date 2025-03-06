@@ -34,7 +34,6 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 	tlsConfig := &tls.Config{}
 	if net.ParseIP(parsedURL.Hostname()) != nil {
 		tlsConfig.InsecureSkipVerify = true
-		logger.Debug("Cert verify skipped: %v", parsedURL.Hostname())
 	}
 	serverConn, err := tls.Dial("tcp", parsedURL.Host, tlsConfig)
 	if err != nil {
