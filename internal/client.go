@@ -52,7 +52,6 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 		return
 	}
 	logger.Debug("Starting exchange: %v <-> %v", clientConn.RemoteAddr(), serverConn.RemoteAddr())
-	if err := io.DataExchange(clientConn, serverConn); err != nil {
-		logger.Debug("Exchange complete: %v", err)
-	}
+	_, _, err = io.DataExchange(clientConn, serverConn)
+	logger.Debug("Exchange complete: %v", err)
 }

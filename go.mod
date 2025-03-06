@@ -1,13 +1,13 @@
 module github.com/yosebyte/atlas
 
-go 1.23.5
+go 1.24.1
 
 require (
-	github.com/yosebyte/x v1.0.9
-	golang.org/x/crypto v0.32.0
+	github.com/yosebyte/x v1.0.12
+	golang.org/x/crypto v0.36.0
 )
 
 require (
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 )

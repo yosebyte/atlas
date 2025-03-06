@@ -51,9 +51,8 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			return
 		}
 		logger.Debug("Starting exchange: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
-		if err := io.DataExchange(clientConn, targetConn); err != nil {
-			logger.Debug("Exchange complete: %v", err)
-		}
+		_, _, err = io.DataExchange(clientConn, targetConn)
+		logger.Debug("Exchange complete: %v", err)
 	} else {
 		proxy := &httputil.ReverseProxy{
 			Director: func(req *http.Request) {
