@@ -1,5 +1,5 @@
-github.com/yosebyte/x v1.0.13 h1:KlNpyOlJ7bnnbyOW9eJHQuwxt5Q0xGtXXKFMcKqC9F4=
-github.com/yosebyte/x v1.0.13/go.mod h1:rxpLGjwfWo9JM1xVkxRO+Zkcx/c1CdGhHjK8Qh3gigU=
+github.com/yosebyte/x v1.0.14 h1:XxVX15gyCxdASw1bnq2J7G9ALSYxI1ZHCv7HG0bHo9k=
+github.com/yosebyte/x v1.0.14/go.mod h1:rxpLGjwfWo9JM1xVkxRO+Zkcx/c1CdGhHjK8Qh3gigU=
 golang.org/x/crypto v0.36.0 h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34=
 golang.org/x/crypto v0.36.0/go.mod h1:Y4J0ReaxCR1IMaabaSMugxJES1EpwhBHhv2bDHklZvc=
 golang.org/x/net v0.37.0 h1:1zLorHbz+LYj7MQlSf1+2tPIIgibq2eL5xkrGk6f+2c=
