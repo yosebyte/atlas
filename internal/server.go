@@ -28,7 +28,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Error("Hijack failed: %v", err)
 			return
 		}
-		logger.Debug("Client connected: %v", clientConn.RemoteAddr())
+		logger.Debug("Client connection: %v <-> %v", clientConn.LocalAddr(), clientConn.RemoteAddr())
 		defer func() {
 			if clientConn != nil {
 				clientConn.Close()
@@ -40,7 +40,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Error("Dial failed: %v", err)
 			return
 		}
-		logger.Debug("Target connected: %v", targetConn.RemoteAddr())
+		logger.Debug("Target connection: %v <-> %v", targetConn.LocalAddr(), targetConn.RemoteAddr())
 		defer func() {
 			if targetConn != nil {
 				targetConn.Close()
@@ -50,7 +50,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			logger.Error("Write failed: %v", err)
 			return
 		}
-		logger.Debug("Starting exchange: %v <-> %v", clientConn.RemoteAddr(), targetConn.RemoteAddr())
+		logger.Debug("Starting exchange: %v <-> %v", clientConn.LocalAddr(), targetConn.LocalAddr())
 		_, _, err = io.DataExchange(clientConn, targetConn)
 		logger.Debug("Exchange complete: %v", err)
 	} else {
@@ -63,7 +63,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			},
 			ErrorLog: logger.StdLogger(),
 		}
-		logger.Debug("Handling HTTP: %v %v", r.Method, r.URL)
+		logger.Debug("HTTP: %v -> %v", r.Method, r.URL)
 		proxy.ServeHTTP(w, r)
 	}
 }
