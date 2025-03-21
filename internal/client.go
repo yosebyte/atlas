@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yosebyte/x/io"
+	"github.com/yosebyte/x/conn"
 	"github.com/yosebyte/x/log"
 )
 
@@ -51,6 +51,6 @@ func clientConnect(w http.ResponseWriter, r *http.Request, parsedURL *url.URL, l
 		return
 	}
 	logger.Debug("Starting exchange: %v <-> %v", clientConn.LocalAddr(), serverConn.LocalAddr())
-	_, _, err = io.DataExchange(clientConn, serverConn)
+	_, _, err = conn.DataExchange(clientConn, serverConn)
 	logger.Debug("Exchange complete: %v", err)
 }

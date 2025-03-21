@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/yosebyte/x/io"
+	"github.com/yosebyte/x/conn"
 	"github.com/yosebyte/x/log"
 )
 
@@ -51,7 +51,7 @@ func serverConnect(w http.ResponseWriter, r *http.Request, logger *log.Logger) {
 			return
 		}
 		logger.Debug("Starting exchange: %v <-> %v", clientConn.LocalAddr(), targetConn.LocalAddr())
-		_, _, err = io.DataExchange(clientConn, targetConn)
+		_, _, err = conn.DataExchange(clientConn, targetConn)
 		logger.Debug("Exchange complete: %v", err)
 	} else {
 		proxy := &httputil.ReverseProxy{
