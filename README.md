@@ -1,5 +1,9 @@
 # 🌐 Atlas
 
+[![GitHub release](https://img.shields.io/github/v/release/yosebyte/atlas)](https://github.com/yosebyte/atlas/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/yosebyte/atlas)](https://golang.org/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yosebyte/atlas)](https://goreportcard.com/report/github.com/yosebyte/atlas)
+
 Atlas is a versatile, high-performance networking tool designed for creating secure communication channels across various environments. Operating in both server and client modes, it provides seamless TLS encryption through either Let's Encrypt certificates or self-signed options. With its zero-configuration approach and single-binary deployment, Atlas excels in scenarios ranging from corporate security compliance and microservices communication to remote work infrastructure and multi-cloud connectivity. Its lightweight footprint and intuitive URL-style command syntax make it the ideal solution for developers, system administrators, and security professionals seeking robust, flexible networking capabilities without complexity.
 
 ## 📋 Table of Contents
